@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   commandShip,
   createInitialState,
+  deselectShip,
   getExpectedSaleValue,
   getMarketQuote,
   getSalePrice,
@@ -24,6 +25,17 @@ test("new game starts with the configured capital, procedurally generated astero
   assert.equal(CONFIG.system.planets.length, 5);
   assert.equal(CONFIG.system.asteroidBelts.length, 3);
   assert.equal(CONFIG.system.station.id, state.markets[0].id);
+});
+
+test("no-ship mode prevents asteroid clicks from commanding the previously selected ship", () => {
+  const state = createInitialState();
+  const previousTarget = state.ship.targetId;
+  deselectShip(state);
+  assert.equal(state.selectedShipId, null);
+  const result = commandShip(state, state.asteroids[0].id);
+  assert.equal(result.ok, false);
+  assert.equal(state.ships[0].targetId, previousTarget);
+  assert.equal(state.ships[0].state, "idle");
 });
 
 test("ship accepts valid asteroid commands and rejects unknown targets", () => {
