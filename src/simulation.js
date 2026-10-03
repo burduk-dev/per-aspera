@@ -116,7 +116,7 @@ export function sellCargo(state) {
   }
 
   const quantity = ship.cargo;
-  const unitPrice = getSalePrice();
+  const unitPrice = getSalePrice(state);
   const revenue = Math.floor(quantity * unitPrice);
   if (revenue <= 0) return { ok: false, reason: "Стоимость сделки должна быть положительной." };
 
