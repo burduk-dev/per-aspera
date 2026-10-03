@@ -36,7 +36,10 @@ let lastUiUpdate = 0;
 let lastToast = "";
 let tripStartDistance = 1;
 let lastTargetId = null;
-const stars = createStars(210, 93421);
+const stars = createStars(1600, 93421);
+const camera = { x: CONFIG.map.centerX, y: CONFIG.map.centerY, zoom: 0.145 };
+let dragStart = null;
+let suppressClick = false;
 const categoryNames = { mining: "Добыча", cargo: "Трюм", engine: "Двигатель", reactor: "Реактор" };
 const categoryIcons = { mining: "⌁", cargo: "▤", engine: "⟿", reactor: "ϟ" };
 const shortNames = { mining: "БУР", storage: "ТРЮМ", engine: "ДВИГ.", reactor: "РЕАКТ." };
@@ -115,7 +118,7 @@ function setConfigureMode(open) {
   configuring = open;
   ui.config.classList.toggle("open", open);
   ui.config.setAttribute("aria-hidden", String(!open));
-  ui.hint.textContent = open ? "ВЫБЕРИТЕ СЛОТ НА КОРПУСЕ · УСТАНОВИТЕ МОДУЛЬ" : "ВЫБЕРИТЕ КОРАБЛЬ ИЛИ ЦЕЛЬ НА КАРТЕ";
+  ui.hint.textContent = open ? "ВЫБЕРИТЕ СЛОТ НА КОРПУСЕ · УСТАНОВИТЕ МОДУЛЬ" : "ПЕРЕТАСКИВАНИЕ — КАМЕРА · КОЛЁСИКО — МАСШТАБ · R — ОБЗОР";
   ui.hint.classList.toggle("config-hint", open);
   if (open) {
     openShipPanel(false);
@@ -180,21 +183,68 @@ function runAutoExplore() {
 function drawBackground() {
   const w = CONFIG.map.width, h = CONFIG.map.height;
   ctx.fillStyle = "#070b12"; ctx.fillRect(0, 0, w, h);
-  const nebula = ctx.createRadialGradient(w * .55, h * .44, 5, w * .55, h * .44, 530);
-  nebula.addColorStop(0, "rgba(21,54,69,.28)"); nebula.addColorStop(.5, "rgba(14,31,46,.13)"); nebula.addColorStop(1, "rgba(7,11,18,0)");
+  const star = CONFIG.system.star;
+  const nebula = ctx.createRadialGradient(star.x, star.y, 5, star.x, star.y, 3400);
+  nebula.addColorStop(0, "rgba(25,55,77,.24)");
+  nebula.addColorStop(.42, "rgba(14,31,46,.12)");
+  nebula.addColorStop(1, "rgba(7,11,18,0)");
   ctx.fillStyle = nebula; ctx.fillRect(0, 0, w, h);
-  for (const star of stars) {
-    ctx.globalAlpha = star.alpha; ctx.fillStyle = "#a9c7d9";
-    ctx.fillRect(Math.round(star.x), Math.round(star.y), star.radius, star.radius);
+  for (const dot of stars) {
+    ctx.globalAlpha = dot.alpha; ctx.fillStyle = "#a9c7d9";
+    ctx.fillRect(Math.round(dot.x), Math.round(dot.y), dot.radius, dot.radius);
   }
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = "rgba(95,143,163,.12)"; ctx.lineWidth = 1; ctx.setLineDash([2, 13]);
-  ctx.beginPath(); ctx.ellipse(615, 380, 420, 275, -.23, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(615, 380, 500, 325, -.23, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
-  for (let i = 0; i < 35; i++) {
-    const a = i * 2.399, r = 90 + (i * 37 % 390);
-    ctx.fillStyle = "rgba(108,145,161,.12)"; ctx.fillRect(610 + Math.cos(a) * r, 380 + Math.sin(a) * r * .7, 2, 2);
+}
+function drawSystem() {
+  const { x: cx, y: cy, radius } = CONFIG.system.star;
+  ctx.save();
+  ctx.strokeStyle = "rgba(100,150,180,.13)"; ctx.lineWidth = 2; ctx.setLineDash([8, 18]);
+  for (const planet of CONFIG.system.planets) {
+    ctx.beginPath(); ctx.ellipse(cx, cy, planet.orbit, planet.orbit * .94, 0, 0, Math.PI * 2); ctx.stroke();
   }
+  ctx.setLineDash([]);
+  for (const belt of CONFIG.system.asteroidBelts) {
+    ctx.strokeStyle = "rgba(158,181,195,.08)"; ctx.lineWidth = Math.max(1, 3 * camera.zoom);
+    ctx.beginPath(); ctx.arc(cx, cy, (belt.inner + belt.outer) / 2, 0, Math.PI * 2); ctx.stroke();
+    // Deterministic procedural debris fills the whole belt, independently of mineable nodes.
+    let seed = belt.id.charCodeAt(5) * 991 + 173;
+    const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    ctx.fillStyle = "rgba(169,185,193,.45)";
+    for (let i = 0; i < belt.count * 9; i++) {
+      const angle = rand() * Math.PI * 2;
+      const r = belt.inner + rand() * (belt.outer - belt.inner);
+      const px = cx + Math.cos(angle) * r, py = cy + Math.sin(angle) * r;
+      const size = .8 + rand() * 2.3;
+      ctx.globalAlpha = .2 + rand() * .45;
+      ctx.fillRect(px, py, size, size);
+    }
+    ctx.globalAlpha = 1;
+    if (camera.zoom > .19) {
+      ctx.fillStyle = "#718a9c"; ctx.font = "12px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
+      ctx.fillText(belt.name.toUpperCase(), cx + (belt.inner + belt.outer) / 2, cy - (belt.inner + belt.outer) / 2);
+    }
+  }
+  // Star and its corona.
+  const glow = ctx.createRadialGradient(cx, cy, radius * .35, cx, cy, radius * 3.2);
+  glow.addColorStop(0, "rgba(255,218,145,.36)"); glow.addColorStop(1, "rgba(255,178,95,0)");
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, radius * 3.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#ffe4a8"; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "rgba(255,237,194,.65)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, radius + 9, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = "#f8dca5"; ctx.font = "13px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
+  ctx.fillText(CONFIG.system.star.name.toUpperCase(), cx, cy + radius + 28);
+  for (const planet of CONFIG.system.planets) {
+    const px = cx + Math.cos(planet.phase) * planet.orbit;
+    const py = cy + Math.sin(planet.phase) * planet.orbit * .94;
+    ctx.fillStyle = planet.atmosphere + "24"; ctx.beginPath(); ctx.arc(px, py, planet.radius * 1.8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = planet.color; ctx.beginPath(); ctx.arc(px, py, planet.radius, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = planet.atmosphere + "aa"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, planet.radius + 3, 0, Math.PI * 2); ctx.stroke();
+    if (planet.id === "planet-04") {
+      ctx.strokeStyle = "#c6a7a0"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(px, py, planet.radius * 1.8, planet.radius * .62, -.3, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = "#a9bdcb"; ctx.font = "11px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
+    ctx.fillText(planet.name.toUpperCase(), px, py + planet.radius + 20);
+  }
+  ctx.restore();
 }
 function drawRoute() {
   const target = currentTarget(); if (!target || configuring) return;
@@ -298,7 +348,13 @@ function drawShip() {
   }
 }
 function drawMap() {
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = "#070b12"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width / 2 - camera.x * camera.zoom, canvas.height / 2 - camera.y * camera.zoom);
+  ctx.scale(camera.zoom, camera.zoom);
   drawBackground();
+  drawSystem();
   if (!configuring) {
     drawRoute();
     for (const asteroid of state.asteroids) drawAsteroid(asteroid);
@@ -310,10 +366,13 @@ function drawMap() {
     ctx.fillStyle = "rgba(169,244,207,.035)"; ctx.fillRect(0,0,1200,760);
   }
   drawShip();
+  ctx.restore();
 }
 function canvasPosition(event) {
   const rect = canvas.getBoundingClientRect();
-  return { x:(event.clientX-rect.left)*canvas.width/rect.width, y:(event.clientY-rect.top)*canvas.height/rect.height };
+  const sx = (event.clientX - rect.left) * canvas.width / rect.width;
+  const sy = (event.clientY - rect.top) * canvas.height / rect.height;
+  return { x: (sx - canvas.width / 2) / camera.zoom + camera.x, y: (sy - canvas.height / 2) / camera.zoom + camera.y };
 }
 function handleMapClick(event) {
   const point = canvasPosition(event);
@@ -456,8 +515,41 @@ ui.moduleCategories.querySelectorAll("[data-category]").forEach(button=>button.a
   if(first) selectedSlot=first.x+","+first.y;
   renderModuleDock();drawMap();
 }));
-canvas.addEventListener("click",handleMapClick);
+canvas.addEventListener("click", event => { if (suppressClick) { suppressClick = false; return; } handleMapClick(event); });
+canvas.addEventListener("wheel", event => {
+  if (configuring) return;
+  event.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const sx = (event.clientX - rect.left) * canvas.width / rect.width;
+  const sy = (event.clientY - rect.top) * canvas.height / rect.height;
+  const before = { x:(sx-canvas.width/2)/camera.zoom+camera.x, y:(sy-canvas.height/2)/camera.zoom+camera.y };
+  camera.zoom = Math.max(.065, Math.min(1.15, camera.zoom * (event.deltaY < 0 ? 1.12 : .89)));
+  camera.x = before.x - (sx-canvas.width/2)/camera.zoom;
+  camera.y = before.y - (sy-canvas.height/2)/camera.zoom;
+}, { passive:false });
+canvas.addEventListener("pointerdown", event => {
+  if (configuring || event.button !== 0) return;
+  dragStart = { x:event.clientX, y:event.clientY, cameraX:camera.x, cameraY:camera.y, moved:false };
+  canvas.setPointerCapture(event.pointerId);
+});
+canvas.addEventListener("pointermove", event => {
+  if (!dragStart) return;
+  const dx = event.clientX-dragStart.x, dy = event.clientY-dragStart.y;
+  if (Math.hypot(dx,dy)>4) dragStart.moved = true;
+  if (dragStart.moved) {
+    const rect = canvas.getBoundingClientRect();
+    camera.x = dragStart.cameraX - dx * canvas.width / rect.width / camera.zoom;
+    camera.y = dragStart.cameraY - dy * canvas.height / rect.height / camera.zoom;
+    suppressClick = true;
+  }
+});
+const stopPan = () => { dragStart = null; };
+canvas.addEventListener("pointerup", stopPan);
+canvas.addEventListener("pointercancel", stopPan);
 document.addEventListener("keydown",event=>{
+  if(event.key.toLowerCase()==="r"){camera.x=CONFIG.map.centerX;camera.y=CONFIG.map.centerY;camera.zoom=.145;}
+  if(event.key==="+"||event.key==="=")camera.zoom=Math.min(1.15,camera.zoom*1.15);
+  if(event.key==="-")camera.zoom=Math.max(.065,camera.zoom/1.15);
   if(event.key==="Escape"){
     if(configuring)setConfigureMode(false);
     else if(ui.fleetModal.classList.contains("open"))openFleet(false);
@@ -479,7 +571,7 @@ function frame(now) {
 function initialize() {
   ctx.imageSmoothingEnabled=false;
   updateInterface();
-  ui.objectKicker.textContent="СЕКТОР 01";ui.objectName.textContent="Пояс астероидов";ui.objectDetail.textContent="8 астероидов · 3 торговые станции";
+  ui.objectKicker.textContent="СЕКТОР 01";ui.objectName.textContent="Пояс астероидов";ui.objectDetail.textContent="5 планет · 3 пояса астероидов · 1 станция";
   requestAnimationFrame(frame);
 }
 initialize();
