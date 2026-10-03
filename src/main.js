@@ -4,20 +4,20 @@ import {
 } from "./builder.js";
 import {
   commandShip, createInitialState, getDistanceToTarget, getMarketQuote, getResourceName, getSalePrice,
-  getShipStatusLabel, sellCargo, setPaused, setSpeedMultiplier, stepSimulation, buyShip, selectShip, setShipAutoRepeat
+  getShipStatusLabel, sellCargo, setPaused, setSpeedMultiplier, stepSimulation, buyShip, selectShip, deselectShip, setShipAutoRepeat
 } from "./simulation.js";
 
 const canvas = document.querySelector("#space-map");
 const ctx = canvas.getContext("2d");
 const $ = (selector) => document.querySelector(selector);
 const ui = {
-  credits: $("#credits"), reputation: $("#reputation"), clock: $("#game-clock"), pause: $("#pause-button"),
+  credits: $("#credits"), reputation: $("#reputation"), clock: $("#game-clock"), fleetCount: $("#fleet-count"), resourceStock: $("#resource-stock"), selectionMode: $("#selection-mode"), pause: $("#pause-button"),
   speed: $("#speed-button"), status: $("#sim-status"), shipPanel: $("#ship-panel"), shipName: $("#ship-name"),
   shipState: $("#ship-state"), cargoValue: $("#cargo-value"), cargoPercent: $("#cargo-percent"),
   miningValue: $("#mining-value"), speedValue: $("#speed-value"), moduleCount: $("#module-count"),
   powerLabel: $("#power-label"), targetName: $("#target-name"), targetDescription: $("#target-description"),
   targetProgress: $("#target-progress"), bottomCargo: $("#bottom-cargo"), marketPrice: $("#market-price"),
-  expectedRevenue: $("#expected-revenue"), objectKicker: $("#object-kicker"), objectName: $("#object-name"),
+  objectKicker: $("#object-kicker"), objectName: $("#object-name"),
   objectDetail: $("#object-detail"), hint: $("#map-hint"), toast: $("#toast"), settings: $("#settings-modal"),
   settingsPause: $("#settings-pause"), settingsSpeed: $("#settings-speed"), config: $("#configure-overlay"),
   slotLabel: $("#selected-slot-label"), modulePower: $("#module-power"), moduleCategories: $("#module-categories"),
@@ -55,9 +55,9 @@ function createStars(count, seed) {
 function asteroidById(id) { return state.asteroids.find((item) => item.id === id) ?? state.asteroids[0]; }
 function marketById(id) { return state.markets.find((item) => item.id === id) ?? state.markets[0]; }
 function targetById(id) { return state.asteroids.find((item) => item.id === id) ?? state.markets.find((item) => item.id === id) ?? null; }
-function activeShip() { return state.ships.find(ship => ship.id === state.selectedShipId) ?? state.ships[0] ?? state.ship; }
-function syncActiveShip() { state.ship = activeShip(); return state.ship; }
-function currentTarget() { return targetById(activeShip().targetId); }
+function activeShip() { return state.selectedShipId == null ? null : state.ships.find(ship => ship.id === state.selectedShipId) ?? null; }
+function syncActiveShip() { const ship = activeShip(); if (ship) state.ship = ship; return ship; }
+function currentTarget() { const ship = activeShip(); return ship ? targetById(ship.targetId) : null; }
 function selectedAsteroid() { return asteroidById(state.selectedAsteroidId); }
 function selectedMarket() { return marketById(state.selectedMarketId); }
 function cellAtKey(key) { return design.cells.find((cell) => cell.x + "," + cell.y === key) ?? null; }
@@ -92,7 +92,8 @@ function logEvent(type, message) {
   if (state.events.length > 80) state.events.shift();
 }
 function issueCommand(targetId) {
-  syncActiveShip();
+  const selected = syncActiveShip();
+  if (!selected) { notify("Режим без корабля: выберите корабль, чтобы назначить ему цель."); return; }
   const result = commandShip(state, targetId, activeShip().id);
   if (!result.ok) { notify(result.reason); return; }
   tripStartDistance = getDistanceToTarget(state) || 1;
@@ -129,20 +130,39 @@ function setConfigureMode(open) {
 }
 function updateInterface() {
   const ship = syncActiveShip();
-  const target = currentTarget();
-  const asteroid = selectedAsteroid();
-  const market = selectedMarket();
-  const stats = updateShipFromDesign();
-  const ratio = Math.min(1, ship.cargo / Math.max(1, ship.cargoCapacity));
+  const totalCargo = state.ships.reduce((sum, item) => sum + Math.max(0, item.cargo), 0);
+  const cargoByResource = {};
+  for (const item of state.ships) {
+    if (item.cargo > 0 && item.cargoResourceId) cargoByResource[item.cargoResourceId] = (cargoByResource[item.cargoResourceId] ?? 0) + item.cargo;
+  }
+  const resourceSummary = Object.entries(cargoByResource)
+    .map(([id, amount]) => (CONFIG.resources[id]?.name ?? id) + " " + Math.floor(amount))
+    .join(" · ");
   ui.credits.textContent = formatCredits(state.credits);
-  ui.reputation.textContent = String(Math.floor(ship.totalSold / 10));
+  ui.reputation.textContent = String(Math.floor(state.ships.reduce((sum, item) => sum + item.totalSold, 0) / 10));
   ui.clock.textContent = formatDuration(state.gameSeconds);
+  ui.fleetCount.textContent = String(state.ships.length).padStart(2,"0") + " / 03";
+  ui.resourceStock.textContent = resourceSummary || "0 ед.";
+  ui.selectionMode.textContent = ship ? "КОРАБЛЬ ВЫБРАН" : "БЕЗ КОРАБЛЯ";
   ui.status.textContent = state.paused ? "СИМУЛЯЦИЯ НА ПАУЗЕ" : "СИСТЕМА АКТИВНА";
   ui.pause.textContent = state.paused ? "▶" : "Ⅱ";
   ui.pause.setAttribute("aria-pressed", String(state.paused));
   ui.speed.textContent = state.speedMultiplier + "×";
   ui.settingsPause.querySelector("strong").textContent = state.paused ? "▶" : "Ⅱ";
   ui.settingsSpeed.querySelector("strong").textContent = state.speedMultiplier + "×";
+  if (!ship) {
+    openShipPanel(false);
+    ui.shipName.textContent = "Корабль не выбран";
+    ui.shipState.textContent = "Режим без корабля";
+    if (ui.fleetModal.classList.contains("open")) renderFleet();
+    if (configuring) setConfigureMode(false);
+    return;
+  }
+  const target = currentTarget();
+  const asteroid = selectedAsteroid();
+  const market = selectedMarket();
+  const stats = updateShipFromDesign();
+  const ratio = Math.min(1, ship.cargo / Math.max(1, ship.cargoCapacity));
   ui.shipName.textContent = "«" + ship.name + "»";
   ui.shipState.textContent = getShipStatusLabel(state);
   ui.cargoValue.textContent = ship.cargo.toFixed(0) + " / " + ship.cargoCapacity;
@@ -152,28 +172,23 @@ function updateInterface() {
   ui.moduleCount.textContent = String(stats.modulesCount);
   ui.powerLabel.textContent = stats.power < 0 ? "НЕХВАТКА ЭНЕРГИИ" : "ЭНЕРГИЯ СТАБИЛЬНА";
   ui.powerLabel.style.color = stats.power < 0 ? "#ff938e" : "var(--mint)";
-  ui.bottomCargo.innerHTML = ship.cargo.toFixed(0) + ' <small>ед.</small>';
-  ui.marketPrice.innerHTML = getSalePrice(state, market.id, asteroid.resourceId).toFixed(1) + ' <small>¢ / ед.</small>';
-  const quote = getMarketQuote(state, market.id, asteroid.id);
-  ui.expectedRevenue.innerHTML = formatCredits(ship.cargo > 0 ? Math.floor(ship.cargo * getSalePrice(state, market.id, ship.cargoResourceId)) : quote.expectedRevenue) + ' <small>¢</small>';
   ui.targetName.textContent = target ? (target.resourceId ? target.label + " · " + getResourceName(target.resourceId) : "Станция «" + target.name + "»") : "Нет назначения";
   ui.targetDescription.textContent = target ? (ship.state === "mining" ? "Добыча идёт автоматически. Корабль вернётся при заполнении трюма." : "Расстояние до цели: " + Math.ceil(getDistanceToTarget(state) ?? 0) + " ед.") : "Выберите объект на карте.";
   ui.targetProgress.style.width = target ? (ship.state === "mining" ? Math.min(100, ratio * 100) : Math.max(5, Math.min(100, (1 - (getDistanceToTarget(state) ?? 0) / Math.max(tripStartDistance, 1)) * 100))) + "%" : "0%";
   ui.autoExplore.setAttribute("aria-pressed", String(ship.autoRepeat));
   ui.autoExplore.innerHTML = ship.autoRepeat ? "Автоисследование <span>●</span>" : "Автоисследование <span>○</span>";
-  const fleetStat = [...document.querySelectorAll(".bottom-stat")].find(el => el.querySelector("span")?.textContent === "ФЛОТ");
-  if (fleetStat) fleetStat.querySelector("strong").innerHTML = String(state.ships.length).padStart(2,"0") + " <small>/ 03</small>";
   if (ui.fleetModal.classList.contains("open")) renderFleet();
   if (configuring) renderModuleDock();
 }
 function nearestAvailableAsteroid() {
   const ship = activeShip();
+  if (!ship) return null;
   return state.asteroids.filter((asteroid) => asteroid.reserve > 0 && (ship.cargo <= 0 || asteroid.resourceId === ship.cargoResourceId))
     .sort((a, b) => Math.hypot(a.x - state.ship.x, a.y - state.ship.y) - Math.hypot(b.x - state.ship.x, b.y - state.ship.y))[0] ?? null;
 }
 function runAutoExplore() {
   const ship = activeShip();
-  if (!ship.autoRepeat || state.paused || ship.state !== "idle") return;
+  if (!ship || !ship.autoRepeat || state.paused || ship.state !== "idle") return;
   if (ship.cargo > 0) { issueCommand(state.selectedMarketId); return; }
   const asteroid = nearestAvailableAsteroid();
   if (asteroid) issueCommand(asteroid.id);
@@ -498,6 +513,7 @@ function renderFleet() {
   ui.buyShip.disabled=state.ships.length>=3||state.credits<cost;
 }
 ui.fleetButton.addEventListener("click",()=>openFleet(true));
+$("#deselect-ship").addEventListener("click",()=>{deselectShip(state);openShipPanel(false);openFleet(false);setConfigureMode(false);updateInterface();drawMap();notify("Режим без корабля: команды кораблям не назначаются.");});
 $("#close-fleet").addEventListener("click",()=>openFleet(false));
 $("#fleet-scrim").addEventListener("click",()=>openFleet(false));
 ui.buyShip.addEventListener("click",()=>{const result=buyShip(state);if(!result.ok){notify(result.reason);return;}selectShip(state,result.ship.id);openShipPanel(true);notify("В состав флота принят корабль «"+result.ship.name+"».");renderFleet();updateInterface();drawMap();});
