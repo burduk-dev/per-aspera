@@ -34,6 +34,31 @@ export const CONFIG = Object.freeze({
     initialSpeedMultiplier: 1,
     allowedSpeedMultipliers: Object.freeze([1, 2])
   }),
+  construction: Object.freeze({
+    minCells: 4,
+    maxCells: 20,
+    cellCost: 15,
+    shapeComplexity: Object.freeze({ line: 1.00, compact: 1.05, irregular: 1.12 }),
+    compartmentLevelCosts: Object.freeze({ 1: 40, 2: 90 }),
+    moduleDefinitions: Object.freeze({
+      mining: Object.freeze({ name: "Добыча", compartment: "mining", levels: Object.freeze({
+        1: Object.freeze({ name: "Бур I", cost: 120, power: -2, miningRate: 1 }),
+        2: Object.freeze({ name: "Бур II", cost: 260, power: -4, miningRate: 1.8 })
+      }) }),
+      storage: Object.freeze({ name: "Хранилище", compartment: "cargo", levels: Object.freeze({
+        1: Object.freeze({ name: "Трюм I", cost: 80, power: -1, cargoCapacity: 30 }),
+        2: Object.freeze({ name: "Трюм II", cost: 180, power: -2, cargoCapacity: 70 })
+      }) }),
+      engine: Object.freeze({ name: "Двигатель", compartment: "engine", levels: Object.freeze({
+        1: Object.freeze({ name: "Двигатель I", cost: 100, power: -2, travelSpeed: 112 }),
+        2: Object.freeze({ name: "Двигатель II", cost: 220, power: -4, travelSpeed: 150 })
+      }) }),
+      reactor: Object.freeze({ name: "Реактор", compartment: "reactor", levels: Object.freeze({
+        1: Object.freeze({ name: "Реактор I", cost: 140, power: 5 }),
+        2: Object.freeze({ name: "Реактор II", cost: 300, power: 10 })
+      }) })
+    })
+  }),
   market: Object.freeze({
     salePriceMinMultiplier: 0.8,
     salePriceMaxMultiplier: 1.2,
