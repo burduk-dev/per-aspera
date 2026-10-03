@@ -26,7 +26,7 @@ const ui = {
   oreCargo: $("#ore-cargo"), cargoFill: $("#cargo-meter-fill"), cargoPercent: $("#cargo-percent"),
   cargoResourceName: $("#cargo-resource-name"), cargoResourceType: $("#cargo-resource-type"),
   asteroidStatus: $("#asteroid-status"), asteroidTitle: $("#selected-asteroid-title"),
-  marketTitle: $("#selected-market-title"), marketPrice: $("#market-price"),
+  marketTitle: $("#selected-market-title"), marketPrice: $("#market-price"), asteroidCode: $("#selected-asteroid-code"), marketCode: $("#selected-market-code"),
   course: $("#course-label"), speedMultiplier: $("#speed-multiplier"), eventLog: $("#event-log"),
   logCount: $("#log-count"), toast: $("#toast"), mapCoordinates: $("#map-coordinates"),
   mine: $("#mine-button"), sell: $("#sell-button"), marketOffers: $("#market-offers"),
@@ -171,8 +171,10 @@ function updateInterface() {
   ui.cargoPercent.textContent = `${Math.round(cargoRatio * 100)}%`;
   ui.speedValue.textContent = `${Math.round(ship.travelSpeed)} ед./с`;
   ui.asteroidTitle.textContent = `${getResourceName(asteroid.resourceId)} ${asteroid.label}`;
+  ui.asteroidCode.textContent = `ДОБЫЧА / ${asteroid.label}`;
   ui.asteroidStatus.textContent = asteroid.reserve > 0 ? `Запас: ${Math.ceil(asteroid.reserve)} ед.` : "Астероид истощён";
   ui.marketTitle.textContent = `Станция «${market.name}»`;
+  ui.marketCode.textContent = `ТОРГОВЛЯ / ${market.label}`;
   ui.marketPrice.textContent = `${getSalePrice(state, market.id, asteroid.resourceId).toFixed(1)} ¢ / ед.`;
   ui.speedMultiplier.textContent = `${state.speedMultiplier}×`;
   ui.course.textContent = target ? target.label ?? target.name : "НЕ ЗАДАН";
