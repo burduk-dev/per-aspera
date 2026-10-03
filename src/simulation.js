@@ -322,7 +322,12 @@ function updateMarketDemand(state) {
   }
 }
 
-function stepCurrentShip(state, dt) {\n  updateShipMovement(state, dt);\n  updateMining(state, dt);\n}\n\nexport function stepSimulation(state, realDeltaSeconds) {
+function stepCurrentShip(state, dt) {
+  updateShipMovement(state, dt);
+  updateMining(state, dt);
+}
+
+export function stepSimulation(state, realDeltaSeconds) {
   if (state.paused || !Number.isFinite(realDeltaSeconds) || realDeltaSeconds <= 0) return state;
   const realDt = Math.min(realDeltaSeconds, CONFIG.simulation.maxRealDelta);
   const dt = realDt * state.speedMultiplier;
