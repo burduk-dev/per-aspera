@@ -125,3 +125,10 @@
 .settings-scrim{background:rgba(5,9,14,.78)!important}
 .toast{border:1px solid #3a4858!important;border-left:2px solid #91a5b8!important}
 button:focus-visible{outline-color:#b6c5d4!important}
+
+
+/* Inspection mode reuses the ship card for map objects without ship-only controls. */
+.ship-panel.object-inspect .ship-emblem{border-color:#4a5c6e;background:#202c39;color:#c2ceda}
+.ship-panel.object-inspect .ship-condition{margin-top:12px}
+.ship-panel.object-inspect .ship-stats,.ship-panel.object-inspect .ship-actions{display:none}
+.ship-panel.object-inspect .ship-target{border-top:1px solid #303d4b}
