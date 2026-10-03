@@ -280,12 +280,22 @@ function drawConfiguredShip() {
 }
 function drawShip() {
   if (configuring) { drawConfiguredShip(); return; }
-  const ship = state.ship, moving = ship.state.startsWith("travel-to");
-  drawShipAt(ship.x,ship.y,moving?Math.atan2(ship.vy,ship.vx):0,1,shipPanelOpen);
-  ctx.fillStyle = "#d6e8e6"; ctx.font = "600 10px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
-  ctx.fillText("ПИОНЕР",ship.x,ship.y+34);
-  ctx.fillStyle = "#8199a8"; ctx.font = "8px 'IBM Plex Mono', monospace"; ctx.fillText(Math.floor(ship.cargo)+" / "+ship.cargoCapacity+" CARGO",ship.x,ship.y+46);
-  if (shipPanelOpen) { ctx.strokeStyle = "rgba(169,244,207,.75)"; ctx.setLineDash([3,5]); ctx.beginPath(); ctx.arc(ship.x,ship.y,40,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); }
+  for (const ship of (state.ships ?? [state.ship])) {
+    const selected = ship.id === state.selectedShipId;
+    const moving = ship.state.startsWith("travel-to");
+    drawShipAt(ship.x,ship.y,moving?Math.atan2(ship.vy,ship.vx):0,selected?1:.78,selected && shipPanelOpen);
+    ctx.fillStyle = selected ? "#d6e8e6" : "#8199a8";
+    ctx.font = "600 9px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
+    ctx.fillText(ship.name.toUpperCase(),ship.x,ship.y+31);
+    if (selected) {
+      ctx.fillStyle = "#8199a8"; ctx.font = "8px 'IBM Plex Mono', monospace";
+      ctx.fillText(Math.floor(ship.cargo)+" / "+ship.cargoCapacity+" CARGO",ship.x,ship.y+43);
+    }
+    if (selected && shipPanelOpen) {
+      ctx.strokeStyle = "rgba(169,244,207,.75)"; ctx.setLineDash([3,5]);
+      ctx.beginPath(); ctx.arc(ship.x,ship.y,40,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
 }
 function drawMap() {
   drawBackground();
@@ -316,8 +326,14 @@ function handleMapClick(event) {
     }
     return;
   }
-  if (Math.hypot(point.x-state.ship.x,point.y-state.ship.y) < 38) {
-    openShipPanel(true); ui.objectKicker.textContent="КОРАБЛЬ / 01"; ui.objectName.textContent="«"+state.ship.name+"»"; ui.objectDetail.textContent=getShipStatusLabel(state); return;
+  const clickedShip = (state.ships ?? [state.ship]).find(ship => Math.hypot(point.x-ship.x,point.y-ship.y) < 38);
+  if (clickedShip) {
+    selectShip(state,clickedShip.id);
+    openShipPanel(true);
+    ui.objectKicker.textContent="КОРАБЛЬ / "+clickedShip.id.slice(-2);
+    ui.objectName.textContent="«"+clickedShip.name+"»";
+    ui.objectDetail.textContent=getShipStatusLabel(state);
+    updateInterface(); drawMap(); return;
   }
   const asteroid = state.asteroids.find(item=>Math.hypot(point.x-item.x,point.y-item.y)<34);
   if (asteroid) { state.selectedAsteroidId=asteroid.id; issueCommand(asteroid.id); return; }
