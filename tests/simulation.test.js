@@ -100,3 +100,20 @@ test("a depleted asteroid cannot receive a mining command", () => {
   assert.equal(result.ok, false);
   assert.equal(state.ship.state, "idle");
 });
+
+test("a complete mining run returns to the market and sells exactly once", () => {
+  const state = createInitialState();
+  assert.equal(commandShip(state, state.asteroid.id).ok, true);
+
+  for (let i = 0; i < 1000 && state.credits === 1000; i += 1) {
+    stepSimulation(state, 0.25);
+  }
+
+  assert.equal(state.credits, 1300);
+  assert.equal(state.ship.cargo, 0);
+  assert.equal(state.ship.state, "idle");
+  assert.equal(state.asteroid.reserve, 390);
+  assert.equal(state.market.salesCount, 1);
+  assert.equal(state.lastSale.quantity, 30);
+  assert.equal(state.lastSale.revenue, 300);
+});
