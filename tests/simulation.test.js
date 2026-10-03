@@ -1,4 +1,5 @@
 import test from "node:test";
+import { CONFIG } from "../src/config.js";
 import assert from "node:assert/strict";
 import {
   commandShip,
@@ -13,13 +14,13 @@ import {
   stepSimulation
 } from "../src/simulation.js";
 
-test("new game starts with the configured capital, eight asteroids and three markets", () => {
+test("new game starts with the configured capital, procedurally generated asteroids and one station", () => {
   const state = createInitialState();
   assert.equal(state.credits, 1000);
   assert.equal(state.ship.cargo, 0);
   assert.equal(state.ship.cargoCapacity, 30);
-  assert.equal(state.asteroids.length, 8);
-  assert.equal(state.markets.length, 3);
+  assert.equal(state.asteroids.length, 128);
+  assert.equal(state.markets.length, 1);
 });
 
 test("ship accepts valid asteroid commands and rejects unknown targets", () => {
@@ -124,7 +125,7 @@ test("a complete mining run returns to the selected market and sells exactly onc
   assert.equal(state.ship.cargo, 0);
   assert.equal(state.ship.cargoResourceId, null);
   assert.equal(state.ship.state, "idle");
-  assert.equal(state.asteroids[0].reserve, 390);
+  assert.equal(state.asteroids[0].reserve, state.asteroids[0].initialReserve - 30);
   assert.equal(state.markets[0].salesCount, 1);
   assert.equal(state.lastSale.quantity, 30);
   assert.equal(state.lastSale.revenue, 300);
@@ -133,11 +134,11 @@ test("a complete mining run returns to the selected market and sells exactly onc
 test("market quotes compare prices, distance and expected revenue", () => {
   const state = createInitialState();
   const rareAsteroid = state.asteroids.find((asteroid) => asteroid.resourceId === "rare-earth");
-  const lowDemand = getMarketQuote(state, "market-01", rareAsteroid.id);
-  const highDemand = getMarketQuote(state, "market-02", rareAsteroid.id);
-  assert.ok(highDemand.unitPrice > lowDemand.unitPrice);
-  assert.ok(highDemand.distance > 0);
-  assert.ok(highDemand.expectedRevenue > 0);
+  const quote = getMarketQuote(state, "market-01", rareAsteroid.id);
+  assert.equal(quote.unitPrice, getSalePrice(state, "market-01", "rare-earth"));
+  assert.ok(quote.distance > 0);
+  assert.ok(quote.expectedRevenue > 0);
+  assert.equal(state.markets.length, 1);
 });
 
 test("a sale lowers local demand price and demand recovers with game time", () => {
@@ -183,8 +184,8 @@ test("fleet can buy up to three ships with independent tasks and cargo", async (
   assert.equal(second.state, "travel-to-asteroid");
   selectShip(state, first.id);
   for (let i = 0; i < 10; i += 1) stepSimulation(state, 0.25);
-  assert.notEqual(first.x, 245);
-  assert.notEqual(second.x, 273);
+  assert.notEqual(first.x, CONFIG.start.ship.x);
+  assert.notEqual(second.x, CONFIG.start.ship.x + 28);
   state.credits = 2000;
   const thirdResult = buyShip(state);
   assert.equal(thirdResult.ok, true);
