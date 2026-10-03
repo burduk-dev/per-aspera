@@ -2,159 +2,80 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090d16">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="theme-color" content="#070b12">
   <title>Per aspera ad asteroid</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="./" aria-label="Per aspera ad asteroid — главная">
-        <span class="brand-mark" aria-hidden="true">✳</span>
-        <span><strong>PER ASPERA</strong><small>AD ASTEROID</small></span>
-      </a>
-      <div class="topbar-center"><span class="live-dot"></span><span id="sim-status">СИСТЕМА АКТИВНА</span></div>
-      <div class="topbar-right">
-        <span class="time-label">ВРЕМЯ СИСТЕМЫ</span>
-        <strong id="game-clock">00:00</strong>
-        <button id="pause-button" class="icon-button" type="button" aria-pressed="false">Ⅱ <span>Пауза</span></button>
+  <main class="game" id="game">
+    <canvas id="space-map" width="1200" height="760" aria-label="Космическая карта. Нажмите на астероид или торговую станцию, чтобы назначить цель."></canvas>
+    <div class="space-vignette"></div>
+    <header class="hud-top">
+      <button id="settings-button" class="settings-button" type="button" aria-label="Настройки" title="Настройки">☰</button>
+      <div class="brand-mark"><span class="brand-glyph">✳</span><span><b>PER ASPERA</b><small>MINING CORPORATION</small></span></div>
+      <div class="economy-hud">
+        <div class="hud-metric"><span>РЕПУТАЦИЯ</span><strong id="reputation">0</strong></div>
+        <div class="hud-divider"></div>
+        <div class="hud-metric credits-metric"><span>КРЕДИТЫ</span><strong><i>¢</i><b id="credits">1 000</b></strong></div>
       </div>
     </header>
 
-    <main class="layout">
-      <aside class="sidebar">
-        <section class="capital-panel panel">
-          <div class="eyebrow">ДОСТУПНЫЕ СРЕДСТВА</div>
-          <div class="capital-value"><span class="credit-symbol">¢</span><strong id="credits">1 000</strong></div>
-          <div class="capital-foot"><span class="status-dot"></span> Компания зарегистрирована</div>
-        </section>
+    <aside class="ship-panel" id="ship-panel" aria-hidden="true">
+      <div class="panel-kicker"><span>КОРАБЛЬ / 01</span><button id="close-ship-panel" class="quiet-button" type="button" aria-label="Закрыть">×</button></div>
+      <div class="ship-title-row"><div class="ship-emblem">◈</div><div><h1 id="ship-name">«Пионер»</h1><span id="ship-state">Ожидает приказа</span></div></div>
+      <div class="ship-condition"><span>СОСТОЯНИЕ СИСТЕМ</span><strong id="power-label">ЭНЕРГИЯ СТАБИЛЬНА</strong></div>
+      <div class="ship-stats">
+        <div><span>Груз</span><strong id="cargo-value">0 / 30</strong><small id="cargo-percent">0%</small></div>
+        <div><span>Добыча</span><strong id="mining-value">1.0 <small>ед./с</small></strong></div>
+        <div><span>Скорость</span><strong id="speed-value">112 <small>ед./с</small></strong></div>
+        <div><span>Модули</span><strong id="module-count">4</strong></div>
+      </div>
+      <div class="ship-target"><span class="panel-kicker">ТЕКУЩАЯ ЗАДАЧА</span><strong id="target-name">Нет назначения</strong><p id="target-description">Выберите объект на карте.</p><div class="progress-track"><span id="target-progress"></span></div></div>
+      <div class="ship-actions"><button id="configure-button" class="action-primary" type="button">Настроить <span>↗</span></button><button id="auto-explore-button" class="action-secondary" type="button" aria-pressed="false">Автоисследование <span>○</span></button></div>
+    </aside>
 
-        <section class="panel section-panel">
-          <div class="panel-heading"><span>01 / ФЛОТ</span><span class="count-chip">01 / 03</span></div>
-          <button id="ship-card" class="ship-card selected" type="button">
-            <span class="ship-mini" aria-hidden="true">◆</span>
-            <span class="ship-card-copy"><strong>«Пионер»</strong><small id="ship-state">Ожидает приказа</small></span>
-            <span class="selection-mark">●</span>
-          </button>
-          <div class="stat-list">
-            <div><span>Груз</span><strong id="cargo-value">0 / 30 ед.</strong></div>
-            <div><span>Скорость</span><strong id="speed-value">—</strong></div>
-            <div><span>Добыча</span><strong id="mining-value">1 ед./с</strong></div>
-          </div>
-        </section>
+    <div class="map-hint" id="map-hint"><span class="hint-dot"></span> ВЫБЕРИТЕ КОРАБЛЬ ИЛИ ЦЕЛЬ НА КАРТЕ</div>
+    <div class="map-object-info" id="object-info" aria-live="polite">
+      <span class="object-kicker" id="object-kicker">СЕКТОР 01</span>
+      <strong id="object-name">Пояс астероидов</strong>
+      <span id="object-detail">8 астероидов · 3 торговые станции</span>
+    </div>
 
-        <section class="panel section-panel">
-          <div class="panel-heading"><span>02 / ЦЕЛЬ</span><span class="tiny-icon">⌖</span></div>
-          <div id="target-name" class="target-title">Нет назначения</div>
-          <p id="target-description" class="muted-copy">Выберите объект на карте, чтобы отдать приказ кораблю.</p>
-          <div class="target-progress"><span id="target-progress-bar"></span></div>
-          <div id="target-progress-label" class="progress-label">Ожидание команды</div>
-        </section>
-
-        <section class="panel section-panel">
-          <div class="panel-heading"><span>03 / ГРУЗ</span><span class="tiny-icon">▤</span></div>
-          <div class="resource-row">
-            <span class="resource-icon common" aria-hidden="true">▪</span>
-            <span class="resource-copy"><strong id="cargo-resource-name">Нет груза</strong><small id="cargo-resource-type">Трюм пуст</small></span>
-            <strong id="ore-cargo">0</strong>
-          </div>
-          <div class="cargo-meter"><span id="cargo-meter-fill"></span></div>
-          <div class="resource-note"><span id="cargo-percent">0%</span><span>Вместимость трюма</span></div>
-        </section>
-
-        <div class="sidebar-tip"><span class="tip-icon">i</span><p><strong>Совет диспетчера</strong><br>Выберите астероид, чтобы начать добычу. Корабль автоматически вернётся на станцию, когда трюм заполнится.</p></div>
-      </aside>
-
-      <section class="main-content">
-        <div class="view-heading">
-          <div><div class="eyebrow">СЕКТОР 01 · БЛИЖНИЙ ПОЯС</div><h1>Операционная карта</h1><p>Назначайте цели. Корабли выполнят приказ автоматически.</p></div>
-          <div class="map-legend"><span><i class="legend-dot ship-dot"></i>Корабль</span><span><i class="legend-dot asteroid-dot"></i>Астероид</span><span><i class="legend-dot station-dot"></i>Торговая точка</span></div>
+    <section class="configure-overlay" id="configure-overlay" aria-hidden="true">
+      <div class="configure-header"><div><span class="panel-kicker">ИНЖЕНЕРНЫЙ РЕЖИМ</span><h2>Конфигурация корабля</h2></div><button id="close-configure" class="close-configure" type="button">ГОТОВО <b>×</b></button></div>
+      <div class="module-dock">
+        <div class="dock-heading"><div><span class="panel-kicker">МОДУЛЬНЫЕ СЛОТЫ</span><strong id="selected-slot-label">Выберите квадрат на корпусе</strong></div><div class="dock-energy"><span>ЭНЕРГОБАЛАНС</span><strong id="module-power">0 / 0</strong></div></div>
+        <div class="module-categories" id="module-categories">
+          <button class="module-category active" data-category="mining" type="button"><span>⌁</span> Добыча</button>
+          <button class="module-category" data-category="cargo" type="button"><span>▤</span> Трюм</button>
+          <button class="module-category" data-category="engine" type="button"><span>⟿</span> Двигатель</button>
+          <button class="module-category" data-category="reactor" type="button"><span>ϟ</span> Реактор</button>
         </div>
+        <div class="module-options" id="module-options"></div>
+        <div class="dock-footer"><span id="configure-hint">Выберите слот на корпусе, затем установите совместимый модуль.</span><strong>МОДУЛИ ПРИОБРЕТАЮТСЯ ЗА КРЕДИТЫ</strong></div>
+      </div>
+    </section>
 
-        <div class="map-frame">
-          <div class="map-topline"><span><span class="live-dot"></span> LIVE FEED</span><span id="map-coordinates">X 000 · Y 000</span><span>СЕТКА НАВИГАЦИИ / 01</span></div>
-          <canvas id="space-map" width="1200" height="760" aria-label="Карта системы. Нажмите на астероид или торговую точку, чтобы назначить цель кораблю."></canvas>
-          <div class="map-bottomline"><span>КУРС: <strong id="course-label">НЕ ЗАДАН</strong></span><span>СКОРОСТЬ СИМУЛЯЦИИ <strong id="speed-multiplier">1×</strong></span></div>
-        </div>
+    <footer class="hud-bottom">
+      <div class="bottom-company"><span class="company-status"></span><div><strong>КОМПАНИЯ</strong><small id="sim-status">СИСТЕМА АКТИВНА</small></div></div>
+      <div class="bottom-stat"><span>ВРЕМЯ</span><strong id="game-clock">00:00</strong></div>
+      <div class="bottom-stat"><span>ФЛОТ</span><strong>01 <small>/ 03</small></strong></div>
+      <div class="bottom-stat"><span>ГРУЗ НА БОРТУ</span><strong id="bottom-cargo">0 <small>ед.</small></strong></div>
+      <div class="bottom-stat"><span>РЫНОЧНАЯ ЦЕНА</span><strong id="market-price">10.0 <small>¢ / ед.</small></strong></div>
+      <div class="bottom-stat bottom-revenue"><span>ОЖИДАЕМАЯ ВЫРУЧКА</span><strong id="expected-revenue">0 <small>¢</small></strong></div>
+      <div class="bottom-controls"><button id="speed-button" type="button" title="Скорость симуляции">1×</button><button id="pause-button" type="button" aria-pressed="false" title="Пауза">Ⅱ</button></div>
+    </footer>
 
-        <div class="action-grid">
-          <article class="action-card">
-            <div class="action-card-icon asteroid-card-icon">◈</div>
-            <div><div id="selected-asteroid-code" class="eyebrow">ДОБЫЧА / A-01</div><h2 id="selected-asteroid-title">Железный астероид A-01</h2><p><span class="inline-status"></span><span id="asteroid-status">Запас: 420 ед.</span></p></div>
-            <button id="mine-button" type="button" class="secondary-button">Отправить <span>↗</span></button>
-          </article>
-          <article class="action-card">
-            <div class="action-card-icon market-card-icon">⌂</div>
-            <div><div id="selected-market-code" class="eyebrow">ТОРГОВЛЯ / M-01</div><h2 id="selected-market-title">Станция «Меридиан»</h2><p>Цена: <strong id="market-price">10 ¢ / ед.</strong></p></div>
-            <button id="sell-button" type="button" class="secondary-button">Продать <span>↗</span></button>
-          </article>
-        </div>
-        <section id="builder-panel" class="builder-panel panel">
-          <div class="panel-heading"><span>04 / КОНСТРУКТОР КОРАБЛЯ</span><span id="builder-validation-badge" class="builder-badge">ЧЕРТЁЖ</span></div>
-          <div class="builder-intro"><div><h2 id="builder-title">Корпус «Стандартный добытчик»</h2><p>Квадратная сетка 7×5 · от 4 до 20 клеток · соединение только сторонами.</p></div><div class="builder-template-actions"><label for="builder-template">Шаблон</label><select id="builder-template"><option value="light">Лёгкий добытчик</option><option value="standard" selected>Стандартный добытчик</option><option value="hauler">Грузовой добытчик</option></select><button id="builder-reset" class="market-select-button" type="button">Сбросить</button></div></div>
-          <div class="builder-layout">
-            <div class="builder-grid-wrap">
-              <div id="builder-grid" class="builder-grid" role="grid" aria-label="Сетка корпуса корабля"></div>
-              <div class="builder-grid-legend"><span><i class="legend-swatch mining-swatch"></i>Добыча</span><span><i class="legend-swatch cargo-swatch"></i>Трюм</span><span><i class="legend-swatch engine-swatch"></i>Двигатель</span><span><i class="legend-swatch reactor-swatch"></i>Реактор</span></div>
-              <div class="builder-grid-actions"><button id="builder-add-cell" class="secondary-button" type="button">+ Добавить клетку</button><button id="builder-remove-cell" class="market-select-button" type="button">Удалить выбранную</button></div>
-              <p class="builder-hint">Выберите клетку для настройки. Чтобы расширить корпус, нажмите «Добавить клетку», затем пустую клетку рядом с корпусом.</p>
-            </div>
-            <div class="builder-controls">
-              <div class="builder-selected-label">ВЫБРАННАЯ КЛЕТКА <strong id="builder-selected-cell">—</strong></div>
-              <label for="builder-compartment">Тип отсека</label>
-              <select id="builder-compartment"><option value="mining">Добывающий</option><option value="cargo">Грузовой</option><option value="engine">Двигательный</option><option value="reactor">Энергетический</option></select>
-              <label for="builder-compartment-level">Уровень отсека</label>
-              <select id="builder-compartment-level"><option value="1">Уровень I · 40 ¢</option><option value="2">Уровень II · 90 ¢</option></select>
-              <label for="builder-module">Установленный модуль</label>
-              <select id="builder-module"><option value="">Нет модуля</option></select>
-              <label for="builder-module-level">Уровень модуля</label>
-              <select id="builder-module-level"><option value="1">Уровень I</option><option value="2">Уровень II</option></select>
-              <button id="builder-apply-cell" class="secondary-button builder-apply" type="button">Применить к клетке</button>
-              <div id="builder-cell-description" class="builder-cell-description">Выберите клетку корпуса.</div>
-            </div>
-          </div>
-          <div class="builder-summary">
-            <div class="builder-summary-heading"><span>ПРЕДВАРИТЕЛЬНЫЙ РАСЧЁТ</span><span id="builder-power-status">ЭНЕРГИЯ: —</span></div>
-            <div class="builder-metrics">
-              <div><span>Корпус</span><strong id="builder-hull-cost">—</strong></div>
-              <div><span>Отсеки</span><strong id="builder-compartment-cost">—</strong></div>
-              <div><span>Модули</span><strong id="builder-module-cost">—</strong></div>
-              <div><span>Итого</span><strong id="builder-total-cost">—</strong></div>
-              <div><span>Трюм</span><strong id="builder-cargo-capacity">—</strong></div>
-              <div><span>Добыча</span><strong id="builder-mining-rate">—</strong></div>
-              <div><span>Скорость</span><strong id="builder-travel-speed">—</strong></div>
-              <div><span>Клетки</span><strong id="builder-cell-count">—</strong></div>
-            </div>
-            <div id="builder-errors" class="builder-errors" aria-live="polite"></div>
-            <button id="builder-build" class="primary-build-button" type="button">Построить и заменить корабль</button>
-            <p class="builder-footnote">Постройка списывает указанную сумму и заменяет характеристики текущего корабля. Во время полёта или с грузом перестройка запрещена.</p>
-          </div>
-        </section>
-        <section class="markets-panel panel">
-          <div class="panel-heading"><span>СРАВНЕНИЕ РЫНКОВ</span><span class="muted-copy">Цена зависит от спроса</span></div>
-          <div class="table-wrap">
-            <table class="market-table">
-              <thead><tr><th>Торговая точка</th><th>Цена / ед.</th><th>Путь от цели</th><th>Выручка*</th><th></th></tr></thead>
-              <tbody id="market-offers"></tbody>
-            </table>
-          </div>
-          <p class="table-footnote">* Расчёт для доступного объёма выбранного астероида (не более вместимости трюма).</p>
-        </section>
-        <section class="sale-report panel">
-          <div class="panel-heading"><span>ПОСЛЕДНЯЯ СДЕЛКА</span><span id="sale-report-time" class="muted-copy">Пока нет продаж</span></div>
-          <div id="sale-report-content" class="sale-report-content"><span class="report-placeholder">После первой продажи здесь появятся объём, цена за единицу и итоговая выручка.</span></div>
-        </section>
-
-        <section class="log-panel panel">
-          <div class="panel-heading"><span>ЖУРНАЛ ОПЕРАЦИЙ</span><span id="log-count" class="muted-copy">Последние события</span></div>
-          <div id="event-log" class="event-log" aria-live="polite"><div class="log-entry"><span class="log-time">00:00</span><span class="log-dot"></span><span>Система управления готова. Назначьте первую цель.</span></div></div>
-        </section>
-        <footer class="footer-line"><span>PER ASPERA AD ASTEROID <span class="footer-divider">/</span> PROTOTYPE 0.1</span><span>АВТОНОМНАЯ ЛОГИСТИЧЕСКАЯ СИСТЕМА</span></footer>
-      </section>
-    </main>
+    <section class="settings-modal" id="settings-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="settings-scrim" id="settings-scrim"></div><div class="settings-card"><div class="settings-heading"><div><span class="panel-kicker">СИСТЕМНЫЕ ПАРАМЕТРЫ</span><h2 id="settings-title">Настройки</h2></div><button id="close-settings" class="quiet-button" type="button">×</button></div>
+        <button id="settings-pause" class="settings-row" type="button"><span><b>Симуляция</b><small>Остановить или продолжить время</small></span><strong>Ⅱ</strong></button>
+        <button id="settings-speed" class="settings-row" type="button"><span><b>Скорость симуляции</b><small>Переключение между 1× и 2×</small></span><strong>1×</strong></button>
+        <div class="settings-note">Per aspera ad asteroid <span>PROTOTYPE 0.2</span></div>
+      </div>
+    </section>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  </div>
+  </main>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
