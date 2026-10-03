@@ -96,3 +96,10 @@
 .toast{background:#0b131d;border:1px solid #3c5a60;box-shadow:0 8px 24px #000}
 .bottom-controls button{background:#111c28}
 @media(max-width:900px){.hud-top{padding:0 10px;gap:8px}.economy-hud{gap:9px}.hud-metric>span{font-size:7px}.hud-metric>strong{font-size:11px}.brand-mark small{display:none}.hud-bottom{padding:0 10px;gap:12px}.bottom-company{min-width:auto}}
+
+.hud-bottom{background:#080d15;box-shadow:0 -14px 50px #000;border-top-color:#24313d}
+.resources-metric>strong{font-size:10px;white-space:nowrap}
+.bottom-stat{padding:7px 10px;background:#0b131d;border:1px solid #263543}
+.bottom-controls button{background:#111c28;border-color:#263543}
+.fleet-row{background:#0b131d}
+.fleet-card{background:#0b131d;border-color:#263543}
