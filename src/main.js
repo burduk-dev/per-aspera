@@ -173,6 +173,7 @@ function updateInterface() {
   ui.settingsPause.querySelector("strong").textContent = state.paused ? "▶" : "Ⅱ";
   ui.settingsSpeed.querySelector("strong").textContent = state.speedMultiplier + "×";
   if (!ship) {
+    if (selectedMapObject) { ui.shipPanel.classList.add("object-inspect"); return; }
     openShipPanel(false);
     ui.shipName.textContent = "Корабль не выбран";
     ui.shipState.textContent = "Режим без корабля";
@@ -417,33 +418,46 @@ function handleMapClick(event) {
   const point = canvasPosition(event);
   if (configuring) {
     const slot = getSlotLayout().find(item => Math.hypot(point.x-item.x,point.y-item.y) < item.size*.72);
-    if (slot) {
-      selectedSlot = slot.cell.x+","+slot.cell.y;
-      activeCategory = slot.cell.compartment;
-      renderModuleDock(); drawMap(); return;
-    }
+    if (slot) { selectedSlot=slot.cell.x+","+slot.cell.y; activeCategory=slot.cell.compartment; renderModuleDock(); drawMap(); }
     return;
   }
-  const clickedShip = (state.ships ?? [state.ship]).find(ship => Math.hypot(point.x-ship.x,point.y-ship.y) < 38);
-  if (clickedShip) {
-    selectShip(state,clickedShip.id);
-    openShipPanel(true);
+  const clickedShip=(state.ships ?? [state.ship]).find(ship=>Math.hypot(point.x-ship.x,point.y-ship.y)<38);
+  if(clickedShip){
+    selectedMapObject=null;ui.shipPanel.classList.remove("object-inspect");
+    selectShip(state,clickedShip.id);openShipPanel(true);
     ui.objectKicker.textContent="КОРАБЛЬ / "+clickedShip.id.slice(-2);
-    ui.objectName.textContent="«"+clickedShip.name+"»";
-    ui.objectDetail.textContent=getShipStatusLabel(state);
-    updateInterface(); drawMap(); return;
+    ui.objectName.textContent="«"+clickedShip.name+"»";ui.objectDetail.textContent=getShipStatusLabel(state);
+    updateInterface();drawMap();return;
   }
-  const asteroid = state.asteroids.find(item=>Math.hypot(point.x-item.x,point.y-item.y)<34);
-  if (asteroid) { state.selectedAsteroidId=asteroid.id; issueCommand(asteroid.id); return; }
-  const market = state.markets.find(item=>Math.hypot(point.x-item.x,point.y-item.y)<34);
-  if (market) { state.selectedMarketId=market.id; issueCommand(market.id); return; }
-  if (state.selectedShipId != null) {
-    deselectShip(state);
-    openShipPanel(false);
-    if (configuring) setConfigureMode(false);
-    updateInterface();
-    drawMap();
+  const asteroid=state.asteroids.find(item=>Math.hypot(point.x-item.x,point.y-item.y)<34);
+  if(asteroid){
+    state.selectedAsteroidId=asteroid.id;
+    if(activeShip()){selectedMapObject=null;ui.shipPanel.classList.remove("object-inspect");issueCommand(asteroid.id);}
+    else showObjectInfo({id:asteroid.id,name:asteroid.label,kindLabel:"АСТЕРОИД",detailValue:Math.ceil(asteroid.reserve)+" ед.",detailLabel:"ОСТАТОК РЕСУРСА",secondaryValue:CONFIG.resources[asteroid.resourceId]?.name??asteroid.resourceId,positionValue:Math.round(asteroid.x)+", "+Math.round(asteroid.y),description:"Ресурс: "+(CONFIG.resources[asteroid.resourceId]?.name??asteroid.resourceId)+". Запас: "+Math.ceil(asteroid.reserve)+" ед. Координаты: "+Math.round(asteroid.x)+", "+Math.round(asteroid.y)+"."});
+    drawMap();return;
   }
+  const market=state.markets.find(item=>Math.hypot(point.x-item.x,point.y-item.y)<34);
+  if(market){
+    state.selectedMarketId=market.id;
+    if(activeShip()){selectedMapObject=null;ui.shipPanel.classList.remove("object-inspect");issueCommand(market.id);}
+    else showObjectInfo({id:market.id,name:"Станция «"+market.name+"»",kindLabel:"ТОРГОВАЯ СТАНЦИЯ",detailValue:"Рынок",detailLabel:"ТИП ОБЪЕКТА",secondaryValue:"Покупка и продажа",positionValue:Math.round(market.x)+", "+Math.round(market.y),description:"Торговая точка "+market.label+". Здесь можно продавать добытые ресурсы. Координаты: "+Math.round(market.x)+", "+Math.round(market.y)+"."});
+    drawMap();return;
+  }
+  const star=CONFIG.system.star;
+  if(Math.hypot(point.x-star.x,point.y-star.y)<star.radius+18){
+    if(!activeShip())showObjectInfo({id:star.id??"star",name:star.name,kindLabel:"ЗВЕЗДА",detailValue:"Звезда",detailLabel:"ТИП ОБЪЕКТА",secondaryValue:"Центр системы",positionValue:Math.round(star.x)+", "+Math.round(star.y),description:"Центральная звезда системы. Координаты: "+Math.round(star.x)+", "+Math.round(star.y)+"."});
+    return;
+  }
+  const planet=CONFIG.system.planets.find(item=>{const px=star.x+Math.cos(item.phase)*item.orbit,py=star.y+Math.sin(item.phase)*item.orbit*.94;return Math.hypot(point.x-px,point.y-py)<Math.max(item.radius+12,22);});
+  if(planet){
+    if(!activeShip())showObjectInfo({id:planet.id,name:planet.name,kindLabel:"ПЛАНЕТА",detailValue:Math.round(planet.radius)+" ед.",detailLabel:"РАДИУС",secondaryValue:"Орбита "+Math.round(planet.orbit)+" ед.",positionValue:"Звёздная система",description:"Планета на орбите радиусом "+Math.round(planet.orbit)+" ед. Координаты: "+Math.round(star.x+Math.cos(planet.phase)*planet.orbit)+", "+Math.round(star.y+Math.sin(planet.phase)*planet.orbit*.94)+"."});
+    return;
+  }
+  const belt=CONFIG.system.asteroidBelts.find(item=>{const radius=Math.hypot(point.x-star.x,point.y-star.y);return radius>=item.inner-18&&radius<=item.outer+18;});
+  if(belt&&!activeShip()){showObjectInfo({id:belt.id,name:belt.name,kindLabel:"ПОЯС АСТЕРОИДОВ",detailValue:String(belt.count),detailLabel:"ОБЪЕКТОВ В ПОЯСЕ",secondaryValue:"Ресурсный пояс",positionValue:"Радиус "+Math.round(belt.inner)+"–"+Math.round(belt.outer),description:"Астероидный пояс вокруг "+star.name+". Содержит процедурно размещённые астероиды и обломки."});return;}
+  selectedMapObject=null;
+  if(state.selectedShipId!=null)deselectShip(state);
+  openShipPanel(false);updateInterface();drawMap();
 }
 function renderModuleDock() {
   const cell = cellAtKey(selectedSlot);
