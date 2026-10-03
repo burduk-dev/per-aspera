@@ -74,12 +74,17 @@ test("hull cannot exceed 20 cells or shrink below four", () => {
 });
 
 test("removing an articulation cell is rejected and leaves the design intact", () => {
-  const design = createDefaultDesign();
-  design.cells = design.cells.filter((cell) => !(cell.x === 2 && cell.y === 1));
-  design.selectedCell = "1,1";
+  const design = {
+    name: "Narrow hull",
+    selectedCell: "2,1",
+    cells: [0, 1, 2, 3, 4].map((x) => ({
+      x, y: 1, compartment: "cargo", level: 1, moduleId: null, moduleLevel: 1
+    }))
+  };
   const before = design.cells.length;
   const result = removeHullCell(design, "2,1");
   assert.equal(result.ok, false);
+  assert.equal(result.reason, "Нельзя удалить клетку: корпус должен оставаться связным.");
   assert.equal(design.cells.length, before);
 });
 
@@ -87,6 +92,7 @@ test("module compatibility is enforced when configuring a compartment", () => {
   const design = createDefaultDesign();
   const result = configureCell(design, "1,1", { compartment: "engine", moduleId: "mining" });
   assert.equal(result.ok, false);
+  assert.equal(getCell(design, "1,1").compartment, "mining");
   assert.equal(configureCell(design, "1,1", { compartment: "engine" }).ok, true);
   assert.equal(getCell(design, "1,1").moduleId, null);
 });
