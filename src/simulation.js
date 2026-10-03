@@ -63,7 +63,7 @@ export function getSalePrice(state) {
 }
 
 export function getExpectedSaleValue(state) {
-  return Math.floor(state.ship.cargo * getSalePrice());
+  return Math.floor(state.ship.cargo * getSalePrice(state));
 }
 
 export function getDistanceToTarget(state) {
