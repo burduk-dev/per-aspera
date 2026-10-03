@@ -21,6 +21,9 @@ test("new game starts with the configured capital, procedurally generated astero
   assert.equal(state.ship.cargoCapacity, 30);
   assert.equal(state.asteroids.length, 128);
   assert.equal(state.markets.length, 1);
+  assert.equal(CONFIG.system.planets.length, 5);
+  assert.equal(CONFIG.system.asteroidBelts.length, 3);
+  assert.equal(CONFIG.system.station.id, state.markets[0].id);
 });
 
 test("ship accepts valid asteroid commands and rejects unknown targets", () => {
