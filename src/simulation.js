@@ -332,8 +332,23 @@ export function stepSimulation(state, realDeltaSeconds) {
   const realDt = Math.min(realDeltaSeconds, CONFIG.simulation.maxRealDelta);
   const dt = realDt * state.speedMultiplier;
   state.gameSeconds += dt;
-  updateShipMovement(state, dt);
-  updateMining(state, dt);
+  const selectedShip = state.ship;
+  const ships = state.ships ?? [selectedShip];
+  for (const ship of ships) {
+    state.ship = ship;
+    updateShipMovement(state, dt);
+    updateMining(state, dt);
+    if (ship.autoRepeat && ship.state === "idle") {
+      const asteroid = state.asteroids
+        .filter(item => item.reserve > 0 && (ship.cargo <= 0 || ship.cargoResourceId === item.resourceId))
+        .sort((a,b) => distanceBetween(ship,a)-distanceBetween(ship,b))[0];
+      if (ship.cargo > 0) {
+        const market = state.markets.reduce((best,item) => distanceBetween(ship,item)<distanceBetween(ship,best)?item:best,state.markets[0]);
+        commandCurrentShip(state,market.id);
+      } else if (asteroid) commandCurrentShip(state,asteroid.id);
+    }
+  }
+  state.ship = selectedShip;
   updateMarketDemand(state);
   return state;
 }
