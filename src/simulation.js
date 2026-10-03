@@ -114,6 +114,13 @@ export function getMarketQuote(state, marketId, asteroidId = state.selectedAster
   };
 }
 
+export function selectMarket(state, marketId) {
+  const market = getMarket(state, marketId);
+  if (!market) return { ok: false, reason: "Неизвестная торговая точка." };
+  state.selectedMarketId = market.id;
+  return { ok: true };
+}
+
 export function commandShip(state, targetId) {
   const target = getTarget(state, targetId);
   if (!target) return { ok: false, reason: "Неизвестная цель." };
