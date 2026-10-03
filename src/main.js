@@ -350,21 +350,22 @@ function drawShip() {
 function drawMap() {
   ctx.setTransform(1,0,0,1,0,0);
   ctx.fillStyle = "#070b12"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  if (configuring) {
+    const glow = ctx.createRadialGradient(600,350,25,600,350,300);
+    glow.addColorStop(0,"rgba(80,160,146,.1)"); glow.addColorStop(1,"rgba(7,11,18,0)");
+    ctx.fillStyle = glow; ctx.fillRect(250,80,700,560);
+    ctx.fillStyle = "rgba(169,244,207,.035)"; ctx.fillRect(0,0,1200,760);
+    drawConfiguredShip();
+    return;
+  }
   ctx.save();
   ctx.translate(canvas.width / 2 - camera.x * camera.zoom, canvas.height / 2 - camera.y * camera.zoom);
   ctx.scale(camera.zoom, camera.zoom);
   drawBackground();
   drawSystem();
-  if (!configuring) {
-    drawRoute();
-    for (const asteroid of state.asteroids) drawAsteroid(asteroid);
-    for (const market of state.markets) drawMarket(market);
-  } else {
-    const glow = ctx.createRadialGradient(600,350,25,600,350,300);
-    glow.addColorStop(0,"rgba(80,160,146,.1)"); glow.addColorStop(1,"rgba(7,11,18,0)");
-    ctx.fillStyle = glow; ctx.fillRect(250,80,700,560);
-    ctx.fillStyle = "rgba(169,244,207,.035)"; ctx.fillRect(0,0,1200,760);
-  }
+  drawRoute();
+  for (const asteroid of state.asteroids) drawAsteroid(asteroid);
+  for (const market of state.markets) drawMarket(market);
   drawShip();
   ctx.restore();
 }
@@ -372,6 +373,7 @@ function canvasPosition(event) {
   const rect = canvas.getBoundingClientRect();
   const sx = (event.clientX - rect.left) * canvas.width / rect.width;
   const sy = (event.clientY - rect.top) * canvas.height / rect.height;
+  if (configuring) return { x:sx, y:sy };
   return { x: (sx - canvas.width / 2) / camera.zoom + camera.x, y: (sy - canvas.height / 2) / camera.zoom + camera.y };
 }
 function handleMapClick(event) {
