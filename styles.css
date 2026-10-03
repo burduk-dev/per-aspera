@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-:root{color-scheme:dark;--bg:#070b12;--text:#e5edf4;--muted:#8393a6;--mint:#a9f4cf;--cyan:#72d9e8;--amber:#ffc879;--line:rgba(155,184,209,.17);--mono:"IBM Plex Mono",monospace;--sans:Manrope,system-ui,sans-serif}
+:root{color-scheme:dark;--bg:#070b12;--text:#e5edf4;--muted:#8393a6;--mint:#a9f4cf;--cyan:#72d9e8;--amber:#ffc879;--line:rgba(155,184,209,.17);--mono:"DotGothic16",monospace;--sans:"DotGothic16",monospace}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans)}button{font:inherit;color:inherit;cursor:pointer}button:focus-visible{outline:1px solid var(--mint);outline-offset:3px}button:disabled{opacity:.35;cursor:not-allowed}
 .game{position:relative;width:100%;height:100dvh;min-height:480px;overflow:hidden;background:#070b12;isolation:isolate}#space-map{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;cursor:grab;touch-action:none}#space-map:active{cursor:grabbing}.space-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 53% 47%,transparent 28%,rgba(4,7,12,.24) 78%,rgba(4,7,12,.66));z-index:1}
 .hud-top{position:absolute;z-index:4;top:0;left:0;right:0;height:68px;display:flex;align-items:center;gap:18px;padding:0 24px;background:linear-gradient(180deg,rgba(5,9,15,.88),rgba(5,9,15,.45));border-bottom:1px solid rgba(150,184,211,.09)}
@@ -78,3 +78,21 @@
 .fleet-row-actions button[aria-pressed=true]{border-color:var(--mint);color:var(--mint)}
 .fleet-buy{margin-top:4px}.fleet-note{font-size:10px;line-height:1.5;color:#7e91a4;margin:13px 0 0}
 @media(max-width:520px){.fleet-card{padding:14px}.fleet-row{grid-template-columns:1fr}.fleet-row-actions{justify-content:flex-start}.bottom-controls #fleet-button{width:44px;font-size:9px}}
+
+/* Solid, opaque interface surfaces: keep the game world behind panels fully hidden. */
+.hud-top{background:#080d15;border-bottom-color:#24313d}
+.ship-panel{background:#0b131d;backdrop-filter:none}
+.map-hint{padding:8px 11px;background:#0b131d;border:1px solid #263543;color:#b1c1cf}
+.map-object-info{padding:10px 12px;background:#0b131d;border:1px solid #263543}
+.configure-header{background:#080d15;backdrop-filter:none;border:1px solid #263543}
+.module-dock{background:#080d15;backdrop-filter:none}
+.module-option{background:#111c28}
+.module-option:hover{background:#182a35}
+.module-option.selected{background:#173127}
+.module-category.active{background:#13251f}
+.settings-scrim{background:#03070c;backdrop-filter:none}
+.settings-card,.fleet-card{background:#0b131d}
+.settings-row{background:#0b131d}
+.toast{background:#0b131d;border:1px solid #3c5a60;box-shadow:0 8px 24px #000}
+.bottom-controls button{background:#111c28}
+@media(max-width:900px){.hud-top{padding:0 10px;gap:8px}.economy-hud{gap:9px}.hud-metric>span{font-size:7px}.hud-metric>strong{font-size:11px}.brand-mark small{display:none}.hud-bottom{padding:0 10px;gap:12px}.bottom-company{min-width:auto}}
