@@ -27,6 +27,34 @@ function generateAsteroids() {
   return result;
 }
 
+function generatePlanets() {
+  let seed = 184731;
+  const random = () => { seed = (seed * 48271) % 2147483647; return (seed - 1) / 2147483646; };
+  const palette = [
+    ["#b88a69", "#d59b72"], ["#4c9aab", "#76d6df"], ["#c8b17d", "#f0d7a3"],
+    ["#9c6d78", "#d68a9a"], ["#6b7caa", "#9bb4ef"], ["#7c9c83", "#a8d4a6"]
+  ];
+  const bands = [
+    { name:"Веста", orbit:520, min:18, max:30 },
+    { name:"Нерея", orbit:1080, min:32, max:48 },
+    { name:"Кассини", orbit:1620, min:26, max:42 },
+    { name:"Эреб", orbit:2240, min:48, max:68 },
+    { name:"Орион", orbit:2910, min:58, max:84 }
+  ];
+  return bands.map((planet, index) => {
+    const colors = palette[Math.floor(random() * palette.length)];
+    return Object.freeze({
+      id:"planet-" + String(index + 1).padStart(2,"0"),
+      name:planet.name,
+      orbit:planet.orbit,
+      radius:Math.round(planet.min + random() * (planet.max - planet.min)),
+      color:colors[0],
+      phase:random() * Math.PI * 2,
+      atmosphere:colors[1]
+    });
+  });
+}
+
 export const CONFIG = Object.freeze({
   version: 1,
   map: Object.freeze({ width: 7200, height: 7200, centerX: 3600, centerY: 3600 }),
@@ -43,13 +71,7 @@ export const CONFIG = Object.freeze({
     seed: 483921,
     star: Object.freeze({ x: 3600, y: 3600, radius: 95, name: "Helios" }),
     station: Object.freeze({ id: "market-01", label: "СТАНЦИЯ", name: "Меридиан", x: 3715, y: 3600, baselineDemand: Object.freeze({ "iron-ore": 1, "rare-earth": 1 }) }),
-    planets: Object.freeze([
-      Object.freeze({ id: "planet-01", name: "Веста", orbit: 520, radius: 24, color: "#b88a69", phase: 0.55, atmosphere: "#d59b72" }),
-      Object.freeze({ id: "planet-02", name: "Нерея", orbit: 1080, radius: 42, color: "#4c9aab", phase: 2.3, atmosphere: "#76d6df" }),
-      Object.freeze({ id: "planet-03", name: "Кассини", orbit: 1620, radius: 34, color: "#c8b17d", phase: 4.15, atmosphere: "#f0d7a3" }),
-      Object.freeze({ id: "planet-04", name: "Эреб", orbit: 2240, radius: 61, color: "#9c6d78", phase: 5.1, atmosphere: "#d68a9a" }),
-      Object.freeze({ id: "planet-05", name: "Орион", orbit: 2910, radius: 76, color: "#6b7caa", phase: 1.25, atmosphere: "#9bb4ef" })
-    ]),
+    planets: Object.freeze(generatePlanets()),
     asteroidBelts: Object.freeze([
       Object.freeze({ id: "belt-01", name: "Внутренний пояс", inner: 760, outer: 890, count: 34, resourceId: "iron-ore" }),
       Object.freeze({ id: "belt-02", name: "Средний пояс", inner: 1260, outer: 1430, count: 42, resourceId: "iron-ore" }),
