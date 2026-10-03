@@ -1,5 +1,9 @@
 import { CONFIG, formatCredits, formatDuration } from "./config.js";
 import {
+  addHullCell, buildDesign, calculateDesignStats, configureCell, createDefaultDesign,
+  getCell, getCompartmentName, getCompatibleModules, removeHullCell, validateDesign
+} from "./builder.js";
+import {
   commandShip,
   createInitialState,
   getDistanceBetweenShipAnd,
@@ -30,10 +34,10 @@ const ui = {
   course: $("#course-label"), speedMultiplier: $("#speed-multiplier"), eventLog: $("#event-log"),
   logCount: $("#log-count"), toast: $("#toast"), mapCoordinates: $("#map-coordinates"),
   mine: $("#mine-button"), sell: $("#sell-button"), marketOffers: $("#market-offers"),
-  saleReportTime: $("#sale-report-time"), saleReportContent: $("#sale-report-content")
+  saleReportTime: $("#sale-report-time"), saleReportContent: $("#sale-report-content"),\n  shipName: $("#ship-card .ship-card-copy strong"), builderGrid: $("#builder-grid"), builderSelectedCell: $("#builder-selected-cell"),\n  builderCompartment: $("#builder-compartment"), builderCompartmentLevel: $("#builder-compartment-level"), builderModule: $("#builder-module"),\n  builderModuleLevel: $("#builder-module-level"), builderCellDescription: $("#builder-cell-description"), builderErrors: $("#builder-errors"),\n  builderBadge: $("#builder-validation-badge"), builderPowerStatus: $("#builder-power-status"), builderHullCost: $("#builder-hull-cost"),\n  builderCompartmentCost: $("#builder-compartment-cost"), builderModuleCost: $("#builder-module-cost"), builderTotalCost: $("#builder-total-cost"),\n  builderCargoCapacity: $("#builder-cargo-capacity"), builderMiningRate: $("#builder-mining-rate"), builderTravelSpeed: $("#builder-travel-speed"),\n  builderCellCount: $("#builder-cell-count"), builderBuild: $("#builder-build"), builderAddCell: $("#builder-add-cell"), builderRemoveCell: $("#builder-remove-cell"),\n  builderApplyCell: $("#builder-apply-cell"), builderReset: $("#builder-reset")
 };
 
-const state = createInitialState();
+const state = createInitialState();\nconst defaultDesign = createDefaultDesign();\nlet design = createDefaultDesign();\nlet builderAddMode = false;
 let renderedEventId = 0;
 let lastFrame = performance.now();
 let lastUiUpdate = 0;
@@ -162,7 +166,7 @@ function updateInterface() {
   ui.pause.setAttribute("aria-pressed", String(state.paused));
   ui.status.textContent = state.paused ? "СИСТЕМА НА ПАУЗЕ" : "СИСТЕМА АКТИВНА";
   ui.status.previousElementSibling.style.background = state.paused ? "#ffc879" : "#a9f4cf";
-  ui.shipState.textContent = getShipStatusLabel(state);
+  ui.shipState.textContent = getShipStatusLabel(state);\n  if (ui.shipName) ui.shipName.textContent = `«${ship.name}»`;
   ui.cargoValue.textContent = `${ship.cargo.toFixed(0)} / ${ship.cargoCapacity} ед.`;
   ui.oreCargo.textContent = ship.cargo.toFixed(0);
   ui.cargoResourceName.textContent = ship.cargoResourceId ? getResourceName(ship.cargoResourceId) : "Нет груза";
@@ -219,6 +223,122 @@ function issueCommand(targetId) {
   tripStartDistance = getDistanceToTarget(state) || 1;
   lastTargetId = state.ship.targetId;
   updateInterface();
+}
+
+const compartmentSymbols = { mining: "M", cargo: "C", engine: "E", reactor: "R" };
+const moduleShortNames = { mining: "БУР", storage: "ТРЮМ", engine: "ДВИГ.", reactor: "РЕАКТ." };
+const moduleNames = { mining: "Добыча", storage: "Хранилище", engine: "Двигатель", reactor: "Реактор" };
+
+function renderBuilderGrid() {
+  ui.builderGrid.replaceChildren();
+  for (let y = 0; y < 5; y += 1) {
+    for (let x = 0; x < 7; x += 1) {
+      const key = `${x},${y}`;
+      const cell = getCell(design, key);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "builder-cell";
+      button.setAttribute("role", "gridcell");
+      button.setAttribute("aria-label", cell
+        ? `Клетка ${key}, отсек: ${getCompartmentName(cell.compartment)}`
+        : `Пустая клетка ${key}`);
+      if (cell) {
+        button.classList.add("hull-cell", `compartment-${cell.compartment}`);
+        if (design.selectedCell === key) button.classList.add("selected");
+        const symbol = document.createElement("span");
+        symbol.className = "cell-symbol";
+        symbol.textContent = compartmentSymbols[cell.compartment] ?? "·";
+        const module = document.createElement("span");
+        module.className = "cell-module";
+        module.textContent = cell.moduleId ? moduleShortNames[cell.moduleId] : `У${cell.level}`;
+        const coord = document.createElement("span");
+        coord.className = "cell-coordinate";
+        coord.textContent = key;
+        button.append(symbol, module, coord);
+      } else {
+        button.classList.add("empty-cell");
+        button.textContent = builderAddMode ? "+" : "·";
+      }
+      button.addEventListener("click", () => {
+        if (cell) {
+          design.selectedCell = key;
+          builderAddMode = false;
+          renderBuilder();
+          return;
+        }
+        if (!builderAddMode) return notify("Нажмите «Добавить клетку», затем выберите пустую клетку рядом с корпусом.");
+        const result = addHullCell(design, x, y);
+        builderAddMode = false;
+        if (!result.ok) notify(result.reason);
+        renderBuilder();
+      });
+      ui.builderGrid.append(button);
+    }
+  }
+}
+
+function updateBuilderControls() {
+  const cell = getCell(design);
+  ui.builderSelectedCell.textContent = cell ? cellKeyLabel(cell) : "—";
+  ui.builderCompartment.disabled = !cell;
+  ui.builderCompartmentLevel.disabled = !cell;
+  ui.builderModule.disabled = !cell;
+  ui.builderModuleLevel.disabled = !cell;
+  ui.builderApplyCell.disabled = !cell;
+  if (!cell) {
+    ui.builderCellDescription.textContent = "Выберите клетку корпуса.";
+    ui.builderModule.replaceChildren(new Option("Нет модуля", ""));
+    return;
+  }
+  ui.builderCompartment.value = cell.compartment;
+  ui.builderCompartmentLevel.value = String(cell.level);
+  const compatible = getCompatibleModules(cell.compartment);
+  ui.builderModule.replaceChildren(new Option("Нет модуля", ""));
+  for (const item of compatible) ui.builderModule.add(new Option(item.name, item.id));
+  ui.builderModule.value = cell.moduleId ?? "";
+  ui.builderModuleLevel.value = String(cell.moduleLevel ?? 1);
+  ui.builderCellDescription.textContent = `${getCompartmentName(cell.compartment)} · уровень ${cell.level}. ${cell.moduleId ? `Модуль: ${moduleNames[cell.moduleId]}, уровень ${cell.moduleLevel}.` : "Модуль не установлен."}`;
+}
+
+function cellKeyLabel(cell) {
+  return `(${cell.x + 1}; ${cell.y + 1})`;
+}
+
+function updateBuilderSummary() {
+  const stats = calculateDesignStats(design);
+  const validation = validateDesign(design, state.credits);
+  ui.builderHullCost.textContent = `${formatCredits(stats.hullCost)} ¢`;
+  ui.builderCompartmentCost.textContent = `${formatCredits(stats.compartmentCost)} ¢`;
+  ui.builderModuleCost.textContent = `${formatCredits(stats.moduleCost)} ¢`;
+  ui.builderTotalCost.textContent = `${formatCredits(stats.cost)} ¢`;
+  ui.builderCargoCapacity.textContent = `${stats.cargoCapacity} ед.`;
+  ui.builderMiningRate.textContent = `${stats.miningRate.toFixed(1)} ед./с`;
+  ui.builderTravelSpeed.textContent = stats.travelSpeed ? `${stats.travelSpeed} ед./с` : "—";
+  ui.builderCellCount.textContent = `${stats.cellCount} / ${CONFIG.construction.maxCells}`;
+  ui.builderPowerStatus.textContent = `ЭНЕРГИЯ: ${stats.power > 0 ? "+" : ""}${stats.power}`;
+  ui.builderPowerStatus.classList.toggle("power-negative", stats.power < 0);
+  ui.builderBadge.textContent = validation.valid ? "СБОРКА ДОПУСТИМА" : `ОШИБОК: ${validation.errors.length}`;
+  ui.builderBadge.classList.toggle("invalid", !validation.valid);
+  ui.builderBuild.disabled = !validation.valid;
+  ui.builderErrors.replaceChildren();
+  if (validation.valid) {
+    const success = document.createElement("div");
+    success.className = "builder-success";
+    success.textContent = `Конфигурация корректна. После постройки останется ${formatCredits(state.credits - stats.cost)} ¢.`;
+    ui.builderErrors.append(success);
+  } else {
+    for (const error of validation.errors) {
+      const row = document.createElement("div");
+      row.textContent = `• ${error.message}`;
+      ui.builderErrors.append(row);
+    }
+  }
+}
+
+function renderBuilder() {
+  renderBuilderGrid();
+  updateBuilderControls();
+  updateBuilderSummary();
 }
 
 function drawBackground() {
@@ -366,6 +486,53 @@ function handleMapClick(event) {
   if (market) { issueCommand(market.id); return; }
   ui.mapCoordinates.textContent = `X ${String(Math.round(point.x)).padStart(3, "0")} · Y ${String(Math.round(point.y)).padStart(3, "0")}`;
 }
+
+ui.builderGrid.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    builderAddMode = false;
+    renderBuilder();
+  }
+});
+ui.builderAddCell.addEventListener("click", () => {
+  builderAddMode = true;
+  renderBuilderGrid();
+  notify("Выберите пустую клетку, которая примыкает к корпусу стороной.");
+});
+ui.builderRemoveCell.addEventListener("click", () => {
+  const result = removeHullCell(design);
+  if (!result.ok) notify(result.reason);
+  renderBuilder();
+});
+ui.builderApplyCell.addEventListener("click", () => {
+  const result = configureCell(design, design.selectedCell, {
+    compartment: ui.builderCompartment.value,
+    level: Number(ui.builderCompartmentLevel.value),
+    moduleId: ui.builderModule.value || null,
+    moduleLevel: Number(ui.builderModuleLevel.value)
+  });
+  if (!result.ok) notify(result.reason);
+  else notify("Настройки отсека применены.");
+  renderBuilder();
+});
+ui.builderReset.addEventListener("click", () => {
+  design = createDefaultDesign();
+  builderAddMode = false;
+  renderBuilder();
+  notify("Восстановлен стандартный чертёж.");
+});
+ui.builderBuild.addEventListener("click", () => {
+  const result = buildDesign(state, design);
+  if (!result.ok) {
+    notify(result.reason);
+    updateBuilderSummary();
+    return;
+  }
+  state.events.push({ id: state.nextEventId++, time: state.gameSeconds, type: "system", message: `Корабль перестроен. Стоимость: ${formatCredits(result.cost)} ¢; энергия: ${result.stats.power > 0 ? "+" : ""}${result.stats.power}.` });
+  if (state.events.length > 80) state.events.shift();
+  notify(`Корабль перестроен за ${formatCredits(result.cost)} ¢.`);
+  updateInterface();
+  renderBuilder();
+});
 
 canvas.addEventListener("click", handleMapClick);
 ui.mine.addEventListener("click", () => issueCommand(state.selectedAsteroidId));
