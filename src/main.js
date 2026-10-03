@@ -362,7 +362,7 @@ function drawConfiguredShip() {
     ctx.fillStyle = selected ? "rgba(174,189,203,.23)" : "rgba(7,14,21,.88)";
     ctx.strokeStyle = selected ? "#d4dfe9" : color; ctx.lineWidth = selected ? 2.5 : 1.2;
     ctx.fillRect(-slot.size/2,-slot.size/2,slot.size,slot.size); ctx.strokeRect(-slot.size/2,-slot.size/2,slot.size,slot.size);
-    ctx.fillStyle = color; ctx.font = "bold 9px 'DotGothic16', monospace"; ctx.textAlign = "center";
+    ctx.fillStyle = color; ctx.font = "bold 9px 'Science Gothic', sans-serif"; ctx.textAlign = "center";
     ctx.fillText(cell.moduleId ? shortNames[cell.moduleId] : "EMPTY",0,-2);
     ctx.fillStyle = "#d5dfe8"; ctx.font = mapLabelFont(8); ctx.fillText(def ? "LV "+cell.moduleLevel : categoryNames[cell.compartment].toUpperCase(),0,10);
     ctx.restore();
