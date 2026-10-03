@@ -34,10 +34,21 @@ const ui = {
   course: $("#course-label"), speedMultiplier: $("#speed-multiplier"), eventLog: $("#event-log"),
   logCount: $("#log-count"), toast: $("#toast"), mapCoordinates: $("#map-coordinates"),
   mine: $("#mine-button"), sell: $("#sell-button"), marketOffers: $("#market-offers"),
-  saleReportTime: $("#sale-report-time"), saleReportContent: $("#sale-report-content"),\n  shipName: $("#ship-card .ship-card-copy strong"), builderGrid: $("#builder-grid"), builderSelectedCell: $("#builder-selected-cell"),\n  builderCompartment: $("#builder-compartment"), builderCompartmentLevel: $("#builder-compartment-level"), builderModule: $("#builder-module"),\n  builderModuleLevel: $("#builder-module-level"), builderCellDescription: $("#builder-cell-description"), builderErrors: $("#builder-errors"),\n  builderBadge: $("#builder-validation-badge"), builderPowerStatus: $("#builder-power-status"), builderHullCost: $("#builder-hull-cost"),\n  builderCompartmentCost: $("#builder-compartment-cost"), builderModuleCost: $("#builder-module-cost"), builderTotalCost: $("#builder-total-cost"),\n  builderCargoCapacity: $("#builder-cargo-capacity"), builderMiningRate: $("#builder-mining-rate"), builderTravelSpeed: $("#builder-travel-speed"),\n  builderCellCount: $("#builder-cell-count"), builderBuild: $("#builder-build"), builderAddCell: $("#builder-add-cell"), builderRemoveCell: $("#builder-remove-cell"),\n  builderApplyCell: $("#builder-apply-cell"), builderReset: $("#builder-reset")
+  saleReportTime: $("#sale-report-time"), saleReportContent: $("#sale-report-content"),
+  shipName: $("#ship-card .ship-card-copy strong"), builderGrid: $("#builder-grid"), builderSelectedCell: $("#builder-selected-cell"),
+  builderCompartment: $("#builder-compartment"), builderCompartmentLevel: $("#builder-compartment-level"), builderModule: $("#builder-module"),
+  builderModuleLevel: $("#builder-module-level"), builderCellDescription: $("#builder-cell-description"), builderErrors: $("#builder-errors"),
+  builderBadge: $("#builder-validation-badge"), builderPowerStatus: $("#builder-power-status"), builderHullCost: $("#builder-hull-cost"),
+  builderCompartmentCost: $("#builder-compartment-cost"), builderModuleCost: $("#builder-module-cost"), builderTotalCost: $("#builder-total-cost"),
+  builderCargoCapacity: $("#builder-cargo-capacity"), builderMiningRate: $("#builder-mining-rate"), builderTravelSpeed: $("#builder-travel-speed"),
+  builderCellCount: $("#builder-cell-count"), builderBuild: $("#builder-build"), builderAddCell: $("#builder-add-cell"), builderRemoveCell: $("#builder-remove-cell"),
+  builderApplyCell: $("#builder-apply-cell"), builderReset: $("#builder-reset")
 };
 
-const state = createInitialState();\nconst defaultDesign = createDefaultDesign();\nlet design = createDefaultDesign();\nlet builderAddMode = false;
+const state = createInitialState();
+const defaultDesign = createDefaultDesign();
+let design = createDefaultDesign();
+let builderAddMode = false;
 let renderedEventId = 0;
 let lastFrame = performance.now();
 let lastUiUpdate = 0;
@@ -166,7 +177,8 @@ function updateInterface() {
   ui.pause.setAttribute("aria-pressed", String(state.paused));
   ui.status.textContent = state.paused ? "СИСТЕМА НА ПАУЗЕ" : "СИСТЕМА АКТИВНА";
   ui.status.previousElementSibling.style.background = state.paused ? "#ffc879" : "#a9f4cf";
-  ui.shipState.textContent = getShipStatusLabel(state);\n  if (ui.shipName) ui.shipName.textContent = `«${ship.name}»`;
+  ui.shipState.textContent = getShipStatusLabel(state);
+  if (ui.shipName) ui.shipName.textContent = `«${ship.name}»`;
   ui.cargoValue.textContent = `${ship.cargo.toFixed(0)} / ${ship.cargoCapacity} ед.`;
   ui.oreCargo.textContent = ship.cargo.toFixed(0);
   ui.cargoResourceName.textContent = ship.cargoResourceId ? getResourceName(ship.cargoResourceId) : "Нет груза";
