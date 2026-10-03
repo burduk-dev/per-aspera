@@ -4,7 +4,6 @@ import {
   createInitialState,
   getDistanceBetweenShipAnd,
   getDistanceToTarget,
-  getExpectedSaleValue,
   getMarketQuote,
   getResourceName,
   getSalePrice,
