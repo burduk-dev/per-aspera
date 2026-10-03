@@ -79,33 +79,36 @@ export function removeHullCell(design, key = design.selectedCell) {
 export function configureCell(design, key, changes) {
   const cell = getCell(design, key);
   if (!cell) return { ok: false, reason: "Выберите клетку корпуса." };
+
+  const next = cloneCell(cell);
   if (changes.compartment !== undefined) {
     if (!COMPARTMENT_TYPES.includes(changes.compartment)) return { ok: false, reason: "Неизвестный тип отсека." };
-    cell.compartment = changes.compartment;
-    if (cell.moduleId && RULES.moduleDefinitions[cell.moduleId]?.compartment !== cell.compartment) {
-      cell.moduleId = null;
-      cell.moduleLevel = 1;
-    }
+    next.compartment = changes.compartment;
   }
   if (changes.level !== undefined) {
     if (![1, 2].includes(Number(changes.level))) return { ok: false, reason: "Уровень отсека должен быть I или II." };
-    cell.level = Number(changes.level);
-  }
-  if (changes.moduleId !== undefined) {
-    if (changes.moduleId === "" || changes.moduleId === null) {
-      cell.moduleId = null;
-      cell.moduleLevel = 1;
-    } else {
-      const module = RULES.moduleDefinitions[changes.moduleId];
-      if (!module) return { ok: false, reason: "Неизвестный модуль." };
-      if (module.compartment !== cell.compartment) return { ok: false, reason: "Этот модуль несовместим с выбранным типом отсека." };
-      cell.moduleId = changes.moduleId;
-    }
+    next.level = Number(changes.level);
   }
   if (changes.moduleLevel !== undefined) {
     if (![1, 2].includes(Number(changes.moduleLevel))) return { ok: false, reason: "Уровень модуля должен быть I или II." };
-    cell.moduleLevel = Number(changes.moduleLevel);
+    next.moduleLevel = Number(changes.moduleLevel);
   }
+  if (changes.moduleId !== undefined) {
+    if (changes.moduleId === "" || changes.moduleId === null) {
+      next.moduleId = null;
+      next.moduleLevel = 1;
+    } else {
+      const module = RULES.moduleDefinitions[changes.moduleId];
+      if (!module) return { ok: false, reason: "Неизвестный модуль." };
+      if (module.compartment !== next.compartment) return { ok: false, reason: "Этот модуль несовместим с выбранным типом отсека." };
+      next.moduleId = changes.moduleId;
+    }
+  }
+  if (next.moduleId && RULES.moduleDefinitions[next.moduleId]?.compartment !== next.compartment) {
+    next.moduleId = null;
+    next.moduleLevel = 1;
+  }
+  Object.assign(cell, next);
   return { ok: true };
 }
 
