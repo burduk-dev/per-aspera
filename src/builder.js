@@ -169,6 +169,11 @@ export function validateDesign(design, credits = Infinity) {
   }
   if (cells.length && !connectedCells(cells)) addError("disconnected", "Все клетки корпуса должны быть соединены сторонами.");
   const quote = calculateDesignStats(design);
+  for (const required of ["mining", "storage", "engine", "reactor"]) {
+    if (!cells.some((cell) => cell.moduleId === required)) {
+      addError("required-module", `Для работоспособного корабля нужен модуль: ${RULES.moduleDefinitions[required].name}.`);
+    }
+  }
   if (quote.power < 0) addError("power", `Не хватает энергии: баланс ${quote.power} ед.`);
   if (quote.cost > credits) addError("credits", `Не хватает средств: нужно ${quote.cost} ¢, доступно ${Math.floor(credits)} ¢.`);
   return { valid: errors.length === 0, errors, stats: quote };
@@ -214,4 +219,26 @@ export function getCompatibleModules(compartmentType) {
   return Object.entries(RULES.moduleDefinitions)
     .filter(([, definition]) => definition.compartment === compartmentType)
     .map(([id, definition]) => ({ id, name: definition.name }));
+}
+
+export function buildDesign(state, design) {
+  if (state.ship.state !== "idle") {
+    return { ok: false, reason: "Сначала дождитесь завершения текущего задания корабля." };
+  }
+  if (state.ship.cargo > 0) {
+    return { ok: false, reason: "Перед перестройкой продайте груз из трюма." };
+  }
+  const validation = validateDesign(design, state.credits);
+  if (!validation.valid) return { ok: false, reason: validation.errors[0].message, validation };
+  const stats = validation.stats;
+  state.credits -= stats.cost;
+  state.ship.name = "Пионер Mk.2";
+  state.ship.cargoCapacity = stats.cargoCapacity;
+  state.ship.miningRate = stats.miningRate;
+  state.ship.travelSpeed = stats.travelSpeed;
+  state.ship.targetId = null;
+  state.ship.state = "idle";
+  state.ship.vx = 0;
+  state.ship.vy = 0;
+  return { ok: true, cost: stats.cost, stats };
 }
