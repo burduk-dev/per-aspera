@@ -1,6 +1,6 @@
 import { CONFIG, formatCredits, formatDuration } from "./config.js";
 import {
-  addHullCell, buildDesign, calculateDesignStats, configureCell, createDefaultDesign,
+  addHullCell, buildDesign, calculateDesignStats, configureCell, createDefaultDesign, createTemplateDesign,
   getCell, getCompartmentName, getCompatibleModules, removeHullCell, validateDesign
 } from "./builder.js";
 import {
@@ -42,11 +42,10 @@ const ui = {
   builderCompartmentCost: $("#builder-compartment-cost"), builderModuleCost: $("#builder-module-cost"), builderTotalCost: $("#builder-total-cost"),
   builderCargoCapacity: $("#builder-cargo-capacity"), builderMiningRate: $("#builder-mining-rate"), builderTravelSpeed: $("#builder-travel-speed"),
   builderCellCount: $("#builder-cell-count"), builderBuild: $("#builder-build"), builderAddCell: $("#builder-add-cell"), builderRemoveCell: $("#builder-remove-cell"),
-  builderApplyCell: $("#builder-apply-cell"), builderReset: $("#builder-reset")
+  builderApplyCell: $("#builder-apply-cell"), builderReset: $("#builder-reset"), builderTemplate: $("#builder-template"), builderTitle: $("#builder-title")
 };
 
 const state = createInitialState();
-const defaultDesign = createDefaultDesign();
 let design = createDefaultDesign();
 let builderAddMode = false;
 let renderedEventId = 0;
@@ -349,6 +348,8 @@ function updateBuilderSummary() {
 }
 
 function renderBuilder() {
+  ui.builderTitle.textContent = `Корпус «${design.name}»`;
+  ui.builderTemplate.value = design.templateId ?? "standard";
   renderBuilderGrid();
   updateBuilderControls();
   updateBuilderSummary();
@@ -535,8 +536,14 @@ ui.builderApplyCell.addEventListener("click", () => {
   else notify("Настройки отсека применены.");
   renderBuilder();
 });
+ui.builderTemplate.addEventListener("change", () => {
+  design = createTemplateDesign(ui.builderTemplate.value);
+  builderAddMode = false;
+  renderBuilder();
+  notify(`Загружен шаблон «${design.name}».`);
+});
 ui.builderReset.addEventListener("click", () => {
-  design = createDefaultDesign();
+  design = createTemplateDesign(ui.builderTemplate.value);
   builderAddMode = false;
   renderBuilder();
   notify("Восстановлен стандартный чертёж.");
