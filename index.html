@@ -15,7 +15,13 @@
       <button id="settings-button" class="settings-button" type="button" aria-label="Настройки" title="Настройки">☰</button>
       <div class="brand-mark"><span class="brand-glyph">✳</span><span><b>PER ASPERA</b><small>MINING CORPORATION</small></span></div>
       <div class="economy-hud">
+        <div class="hud-metric"><span>ВРЕМЯ</span><strong id="game-clock">00:00</strong></div>
+        <div class="hud-divider"></div>
+        <div class="hud-metric"><span>ФЛОТ</span><strong id="fleet-count">01 / 03</strong></div>
+        <div class="hud-divider"></div>
         <div class="hud-metric"><span>РЕПУТАЦИЯ</span><strong id="reputation">0</strong></div>
+        <div class="hud-divider"></div>
+        <div class="hud-metric resources-metric"><span>РЕСУРСЫ НА БОРТУ</span><strong id="resource-stock">0 ед.</strong></div>
         <div class="hud-divider"></div>
         <div class="hud-metric credits-metric"><span>КРЕДИТЫ</span><strong><i>¢</i><b id="credits">1 000</b></strong></div>
       </div>
@@ -59,11 +65,7 @@
 
     <footer class="hud-bottom">
       <div class="bottom-company"><span class="company-status"></span><div><strong>КОМПАНИЯ</strong><small id="sim-status">СИСТЕМА АКТИВНА</small></div></div>
-      <div class="bottom-stat"><span>ВРЕМЯ</span><strong id="game-clock">00:00</strong></div>
-      <div class="bottom-stat"><span>ФЛОТ</span><strong>01 <small>/ 03</small></strong></div>
-      <div class="bottom-stat"><span>ГРУЗ НА БОРТУ</span><strong id="bottom-cargo">0 <small>ед.</small></strong></div>
-      <div class="bottom-stat"><span>РЫНОЧНАЯ ЦЕНА</span><strong id="market-price">10.0 <small>¢ / ед.</small></strong></div>
-      <div class="bottom-stat bottom-revenue"><span>ОЖИДАЕМАЯ ВЫРУЧКА</span><strong id="expected-revenue">0 <small>¢</small></strong></div>
+      <div class="bottom-stat"><span>РЕЖИМ</span><strong id="selection-mode">БЕЗ КОРАБЛЯ</strong></div>
       <div class="bottom-controls"><button id="fleet-button" type="button" title="Управление флотом">ФЛОТ</button><button id="speed-button" type="button" title="Скорость симуляции">1×</button><button id="pause-button" type="button" aria-pressed="false" title="Пауза">Ⅱ</button></div>
     </footer>
 
@@ -72,6 +74,7 @@
       <div class="fleet-card">
         <div class="settings-heading"><div><span class="panel-kicker">УПРАВЛЕНИЕ КОМПАНИЕЙ</span><h2 id="fleet-title">Флот</h2></div><button id="close-fleet" class="quiet-button" type="button" aria-label="Закрыть">×</button></div>
         <div id="fleet-list" class="fleet-list"></div>
+        <button id="deselect-ship" class="action-secondary" type="button">Режим без корабля</button>
         <button id="buy-ship" class="action-primary fleet-buy" type="button">Нанять корабль <span id="buy-ship-cost">600 ¢</span></button>
         <p class="fleet-note">До 3 кораблей. Автоповтор отправляет корабль на добычу и затем на продажу автоматически.</p>
       </div>
