@@ -4,7 +4,7 @@ import {
 } from "./builder.js";
 import {
   commandShip, createInitialState, getDistanceToTarget, getMarketQuote, getResourceName, getSalePrice,
-  getShipStatusLabel, sellCargo, setPaused, setSpeedMultiplier, stepSimulation
+  getShipStatusLabel, sellCargo, setPaused, setSpeedMultiplier, stepSimulation, buyShip, selectShip, setShipAutoRepeat
 } from "./simulation.js";
 
 const canvas = document.querySelector("#space-map");
@@ -21,7 +21,7 @@ const ui = {
   objectDetail: $("#object-detail"), hint: $("#map-hint"), toast: $("#toast"), settings: $("#settings-modal"),
   settingsPause: $("#settings-pause"), settingsSpeed: $("#settings-speed"), config: $("#configure-overlay"),
   slotLabel: $("#selected-slot-label"), modulePower: $("#module-power"), moduleCategories: $("#module-categories"),
-  moduleOptions: $("#module-options"), configHint: $("#configure-hint")
+  moduleOptions: $("#module-options"), configHint: $("#configure-hint"), fleetButton: $("#fleet-button"), fleetModal: $("#fleet-modal"), fleetList: $("#fleet-list"), buyShip: $("#buy-ship"), buyShipCost: $("#buy-ship-cost")
 };
 const state = createInitialState();
 let design = createDefaultDesign();
@@ -52,7 +52,9 @@ function createStars(count, seed) {
 function asteroidById(id) { return state.asteroids.find((item) => item.id === id) ?? state.asteroids[0]; }
 function marketById(id) { return state.markets.find((item) => item.id === id) ?? state.markets[0]; }
 function targetById(id) { return state.asteroids.find((item) => item.id === id) ?? state.markets.find((item) => item.id === id) ?? null; }
-function currentTarget() { return targetById(state.ship.targetId); }
+function activeShip() { return state.ships.find(ship => ship.id === state.selectedShipId) ?? state.ships[0] ?? state.ship; }
+function syncActiveShip() { state.ship = activeShip(); return state.ship; }
+function currentTarget() { return targetById(activeShip().targetId); }
 function selectedAsteroid() { return asteroidById(state.selectedAsteroidId); }
 function selectedMarket() { return marketById(state.selectedMarketId); }
 function cellAtKey(key) { return design.cells.find((cell) => cell.x + "," + cell.y === key) ?? null; }
@@ -75,9 +77,11 @@ function shipStats() {
 }
 function updateShipFromDesign() {
   const stats = shipStats();
-  state.ship.cargoCapacity = Math.max(1, stats.cargoCapacity);
-  state.ship.miningRate = Math.max(.1, stats.miningRate);
-  state.ship.travelSpeed = Math.max(20, stats.travelSpeed);
+  for (const ship of state.ships) {
+    ship.cargoCapacity = Math.max(1, stats.cargoCapacity);
+    ship.miningRate = Math.max(.1, stats.miningRate);
+    ship.travelSpeed = Math.max(20, stats.travelSpeed);
+  }
   return stats;
 }
 function logEvent(type, message) {
@@ -85,7 +89,8 @@ function logEvent(type, message) {
   if (state.events.length > 80) state.events.shift();
 }
 function issueCommand(targetId) {
-  const result = commandShip(state, targetId);
+  syncActiveShip();
+  const result = commandShip(state, targetId, activeShip().id);
   if (!result.ok) { notify(result.reason); return; }
   tripStartDistance = getDistanceToTarget(state) || 1;
   lastTargetId = state.ship.targetId;
@@ -120,7 +125,7 @@ function setConfigureMode(open) {
   }
 }
 function updateInterface() {
-  const ship = state.ship;
+  const ship = syncActiveShip();
   const target = currentTarget();
   const asteroid = selectedAsteroid();
   const market = selectedMarket();
@@ -151,17 +156,22 @@ function updateInterface() {
   ui.targetName.textContent = target ? (target.resourceId ? target.label + " · " + getResourceName(target.resourceId) : "Станция «" + target.name + "»") : "Нет назначения";
   ui.targetDescription.textContent = target ? (ship.state === "mining" ? "Добыча идёт автоматически. Корабль вернётся при заполнении трюма." : "Расстояние до цели: " + Math.ceil(getDistanceToTarget(state) ?? 0) + " ед.") : "Выберите объект на карте.";
   ui.targetProgress.style.width = target ? (ship.state === "mining" ? Math.min(100, ratio * 100) : Math.max(5, Math.min(100, (1 - (getDistanceToTarget(state) ?? 0) / Math.max(tripStartDistance, 1)) * 100))) + "%" : "0%";
-  ui.autoExplore.setAttribute("aria-pressed", String(autoExplore));
-  ui.autoExplore.innerHTML = autoExplore ? "Автоисследование <span>●</span>" : "Автоисследование <span>○</span>";
+  ui.autoExplore.setAttribute("aria-pressed", String(ship.autoRepeat));
+  ui.autoExplore.innerHTML = ship.autoRepeat ? "Автоисследование <span>●</span>" : "Автоисследование <span>○</span>";
+  const fleetStat = [...document.querySelectorAll(".bottom-stat")].find(el => el.querySelector("span")?.textContent === "ФЛОТ");
+  if (fleetStat) fleetStat.querySelector("strong").innerHTML = String(state.ships.length).padStart(2,"0") + " <small>/ 03</small>";
+  if (ui.fleetModal.classList.contains("open")) renderFleet();
   if (configuring) renderModuleDock();
 }
 function nearestAvailableAsteroid() {
-  return state.asteroids.filter((asteroid) => asteroid.reserve > 0 && (state.ship.cargo <= 0 || asteroid.resourceId === state.ship.cargoResourceId))
+  const ship = activeShip();
+  return state.asteroids.filter((asteroid) => asteroid.reserve > 0 && (ship.cargo <= 0 || asteroid.resourceId === ship.cargoResourceId))
     .sort((a, b) => Math.hypot(a.x - state.ship.x, a.y - state.ship.y) - Math.hypot(b.x - state.ship.x, b.y - state.ship.y))[0] ?? null;
 }
 function runAutoExplore() {
-  if (!autoExplore || state.paused || state.ship.state !== "idle") return;
-  if (state.ship.cargo > 0) { issueCommand(state.selectedMarketId); return; }
+  const ship = activeShip();
+  if (!ship.autoRepeat || state.paused || ship.state !== "idle") return;
+  if (ship.cargo > 0) { issueCommand(state.selectedMarketId); return; }
   const asteroid = nearestAvailableAsteroid();
   if (asteroid) issueCommand(asteroid.id);
   else { autoExplore = false; notify("В системе больше нет доступных астероидов."); updateInterface(); }
