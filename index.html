@@ -90,6 +90,47 @@
             <button id="sell-button" type="button" class="secondary-button">Продать <span>↗</span></button>
           </article>
         </div>
+        <section id="builder-panel" class="builder-panel panel">
+          <div class="panel-heading"><span>04 / КОНСТРУКТОР КОРАБЛЯ</span><span id="builder-validation-badge" class="builder-badge">ЧЕРТЁЖ</span></div>
+          <div class="builder-intro"><div><h2>Корпус «Стандартный добытчик»</h2><p>Квадратная сетка 7×5 · от 4 до 20 клеток · соединение только сторонами.</p></div><button id="builder-reset" class="market-select-button" type="button">Сбросить</button></div>
+          <div class="builder-layout">
+            <div class="builder-grid-wrap">
+              <div id="builder-grid" class="builder-grid" role="grid" aria-label="Сетка корпуса корабля"></div>
+              <div class="builder-grid-legend"><span><i class="legend-swatch mining-swatch"></i>Добыча</span><span><i class="legend-swatch cargo-swatch"></i>Трюм</span><span><i class="legend-swatch engine-swatch"></i>Двигатель</span><span><i class="legend-swatch reactor-swatch"></i>Реактор</span></div>
+              <div class="builder-grid-actions"><button id="builder-add-cell" class="secondary-button" type="button">+ Добавить клетку</button><button id="builder-remove-cell" class="market-select-button" type="button">Удалить выбранную</button></div>
+              <p class="builder-hint">Выберите клетку для настройки. Чтобы расширить корпус, нажмите «Добавить клетку», затем пустую клетку рядом с корпусом.</p>
+            </div>
+            <div class="builder-controls">
+              <div class="builder-selected-label">ВЫБРАННАЯ КЛЕТКА <strong id="builder-selected-cell">—</strong></div>
+              <label for="builder-compartment">Тип отсека</label>
+              <select id="builder-compartment"><option value="mining">Добывающий</option><option value="cargo">Грузовой</option><option value="engine">Двигательный</option><option value="reactor">Энергетический</option></select>
+              <label for="builder-compartment-level">Уровень отсека</label>
+              <select id="builder-compartment-level"><option value="1">Уровень I · 40 ¢</option><option value="2">Уровень II · 90 ¢</option></select>
+              <label for="builder-module">Установленный модуль</label>
+              <select id="builder-module"><option value="">Нет модуля</option></select>
+              <label for="builder-module-level">Уровень модуля</label>
+              <select id="builder-module-level"><option value="1">Уровень I</option><option value="2">Уровень II</option></select>
+              <button id="builder-apply-cell" class="secondary-button builder-apply" type="button">Применить к клетке</button>
+              <div id="builder-cell-description" class="builder-cell-description">Выберите клетку корпуса.</div>
+            </div>
+          </div>
+          <div class="builder-summary">
+            <div class="builder-summary-heading"><span>ПРЕДВАРИТЕЛЬНЫЙ РАСЧЁТ</span><span id="builder-power-status">ЭНЕРГИЯ: —</span></div>
+            <div class="builder-metrics">
+              <div><span>Корпус</span><strong id="builder-hull-cost">—</strong></div>
+              <div><span>Отсеки</span><strong id="builder-compartment-cost">—</strong></div>
+              <div><span>Модули</span><strong id="builder-module-cost">—</strong></div>
+              <div><span>Итого</span><strong id="builder-total-cost">—</strong></div>
+              <div><span>Трюм</span><strong id="builder-cargo-capacity">—</strong></div>
+              <div><span>Добыча</span><strong id="builder-mining-rate">—</strong></div>
+              <div><span>Скорость</span><strong id="builder-travel-speed">—</strong></div>
+              <div><span>Клетки</span><strong id="builder-cell-count">—</strong></div>
+            </div>
+            <div id="builder-errors" class="builder-errors" aria-live="polite"></div>
+            <button id="builder-build" class="primary-build-button" type="button">Построить и заменить корабль</button>
+            <p class="builder-footnote">Постройка списывает указанную сумму и заменяет характеристики текущего корабля. Во время полёта или с грузом перестройка запрещена.</p>
+          </div>
+        </section>
         <section class="markets-panel panel">
           <div class="panel-heading"><span>СРАВНЕНИЕ РЫНКОВ</span><span class="muted-copy">Цена зависит от спроса</span></div>
           <div class="table-wrap">
