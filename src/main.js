@@ -134,6 +134,7 @@ function issueCommand(targetId) {
 }
 function openShipPanel(open = true) {
   shipPanelOpen = open;
+  if (!open) { selectedMapObject = null; ui.shipPanel.classList.remove("object-inspect"); }
   ui.shipPanel.classList.toggle("open", open);
   ui.shipPanel.setAttribute("aria-hidden", String(!open));
 }
