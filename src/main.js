@@ -122,7 +122,7 @@ function updateInterface() {
   ui.asteroidStatus.textContent = state.asteroid.reserve > 0
     ? `Запас: ${Math.ceil(state.asteroid.reserve)} ед.`
     : "Астероид истощён";
-  ui.marketPrice.textContent = `${getSalePrice().toFixed(1)} ¢ / ед.`;
+  ui.marketPrice.textContent = `${getSalePrice(state).toFixed(1)} ¢ / ед.`;
   ui.speedMultiplier.textContent = `${state.speedMultiplier}×`;
   ui.course.textContent = target
     ? (target.id === state.asteroid.id ? "АСТЕРОИД A-01" : "СТАНЦИЯ M-01")
@@ -273,7 +273,7 @@ function drawMarket() {
   ctx.fillStyle = "#9fb3c6"; ctx.font = "600 13px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
   ctx.fillText("M-01 / MERIDIAN", 0, 75);
   ctx.fillStyle = "#73d9e7"; ctx.font = "10px 'IBM Plex Mono', monospace";
-  ctx.fillText(`${getSalePrice().toFixed(1)} CR / UNIT`, 0, 92);
+  ctx.fillText(`${getSalePrice(state).toFixed(1)} CR / UNIT`, 0, 92);
   ctx.restore();
 }
 
