@@ -28,6 +28,7 @@ let design = createDefaultDesign();
 let selectedSlot = design.cells[0] ? design.cells[0].x + "," + design.cells[0].y : null;
 let activeCategory = "mining";
 let shipPanelOpen = false;
+let selectedMapObject = null;
 let configuring = false;
 let autoExplore = false;
 let renderedEventId = 0;
@@ -56,6 +57,27 @@ function asteroidById(id) { return state.asteroids.find((item) => item.id === id
 function marketById(id) { return state.markets.find((item) => item.id === id) ?? state.markets[0]; }
 function targetById(id) { return state.asteroids.find((item) => item.id === id) ?? state.markets.find((item) => item.id === id) ?? null; }
 function activeShip() { return state.selectedShipId == null ? null : state.ships.find(ship => ship.id === state.selectedShipId) ?? null; }
+function showObjectInfo(object) {
+  selectedMapObject = object;
+  openShipPanel(true);
+  ui.shipPanel.classList.add("object-inspect");
+  ui.shipName.textContent = object.name ?? object.label ?? "Объект системы";
+  ui.shipState.textContent = object.kindLabel ?? "Объект системы";
+  ui.powerLabel.textContent = object.kindLabel ?? "ОБЪЕКТ НА КАРТЕ";
+  ui.cargoValue.textContent = object.detailValue ?? "—";
+  ui.cargoPercent.textContent = object.detailLabel ?? "Информация об объекте";
+  ui.miningValue.textContent = object.secondaryValue ?? "—";
+  ui.speedValue.textContent = object.positionValue ?? "—";
+  ui.moduleCount.textContent = object.id ?? "—";
+  ui.targetName.textContent = object.name ?? object.label ?? "Объект системы";
+  ui.targetDescription.textContent = object.description ?? "Объект звёздной системы.";
+  ui.targetProgress.style.width = "0%";
+  ui.objectKicker.textContent = object.kindLabel ?? "ОБЪЕКТ СИСТЕМЫ";
+  ui.objectName.textContent = object.name ?? object.label ?? "Объект системы";
+  ui.objectDetail.textContent = object.description ?? "";
+  $("#ship-stats")?.setAttribute("aria-hidden","true");
+  updateInterface();
+}
 function syncActiveShip() { const ship = activeShip(); if (ship) state.ship = ship; return ship; }
 function currentTarget() { const ship = activeShip(); return ship ? targetById(ship.targetId) : null; }
 function selectedAsteroid() { return asteroidById(state.selectedAsteroidId); }
