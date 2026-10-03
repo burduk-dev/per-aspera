@@ -25,7 +25,7 @@ const $ = (selector) => document.querySelector(selector);
 const ui = {
   credits: $("#credits"), clock: $("#game-clock"), pause: $("#pause-button"),
   status: $("#sim-status"), shipState: $("#ship-state"), cargoValue: $("#cargo-value"),
-  speedValue: $("#speed-value"), targetName: $("#target-name"), targetDescription: $("#target-description"),
+  speedValue: $("#speed-value"), miningValue: $("#mining-value"), targetName: $("#target-name"), targetDescription: $("#target-description"),
   targetProgress: $("#target-progress-bar"), targetProgressLabel: $("#target-progress-label"),
   oreCargo: $("#ore-cargo"), cargoFill: $("#cargo-meter-fill"), cargoPercent: $("#cargo-percent"),
   cargoResourceName: $("#cargo-resource-name"), cargoResourceType: $("#cargo-resource-type"),
@@ -186,6 +186,7 @@ function updateInterface() {
   ui.cargoFill.style.width = `${cargoRatio * 100}%`;
   ui.cargoPercent.textContent = `${Math.round(cargoRatio * 100)}%`;
   ui.speedValue.textContent = `${Math.round(ship.travelSpeed)} ед./с`;
+  ui.miningValue.textContent = `${ship.miningRate.toFixed(1)} ед./с`;
   ui.asteroidTitle.textContent = `${getResourceName(asteroid.resourceId)} ${asteroid.label}`;
   ui.asteroidCode.textContent = `ДОБЫЧА / ${asteroid.label}`;
   ui.asteroidStatus.textContent = asteroid.reserve > 0 ? `Запас: ${Math.ceil(asteroid.reserve)} ед.` : "Астероид истощён";
