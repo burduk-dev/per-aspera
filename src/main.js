@@ -505,6 +505,14 @@ ui.builderGrid.addEventListener("keydown", (event) => {
     renderBuilder();
   }
 });
+ui.builderCompartment.addEventListener("change", () => {
+  const selected = ui.builderModule.value;
+  const compatible = getCompatibleModules(ui.builderCompartment.value);
+  ui.builderModule.replaceChildren(new Option("Нет модуля", ""));
+  for (const item of compatible) ui.builderModule.add(new Option(item.name, item.id));
+  ui.builderModule.value = compatible.some((item) => item.id === selected) ? selected : "";
+});
+
 ui.builderAddCell.addEventListener("click", () => {
   builderAddMode = true;
   renderBuilderGrid();
