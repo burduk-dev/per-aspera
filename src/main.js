@@ -16,7 +16,7 @@ const ui = {
   shipState: $("#ship-state"), cargoValue: $("#cargo-value"), cargoPercent: $("#cargo-percent"),
   miningValue: $("#mining-value"), speedValue: $("#speed-value"), moduleCount: $("#module-count"),
   powerLabel: $("#power-label"), targetName: $("#target-name"), targetDescription: $("#target-description"),
-  targetProgress: $("#target-progress"), bottomCargo: $("#bottom-cargo"), marketPrice: $("#market-price"),
+  targetProgress: $("#target-progress"),
   objectKicker: $("#object-kicker"), objectName: $("#object-name"),
   objectDetail: $("#object-detail"), hint: $("#map-hint"), toast: $("#toast"), settings: $("#settings-modal"),
   settingsPause: $("#settings-pause"), settingsSpeed: $("#settings-speed"), config: $("#configure-overlay"),
