@@ -1,0 +1,13 @@
+{
+  "name": "per-aspera-ad-asteroid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A small HTML5 asteroid mining and trading game",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
