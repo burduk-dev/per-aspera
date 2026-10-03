@@ -56,7 +56,7 @@
           <div class="panel-heading"><span>03 / ГРУЗ</span><span class="tiny-icon">▤</span></div>
           <div class="resource-row">
             <span class="resource-icon common" aria-hidden="true">▪</span>
-            <span class="resource-copy"><strong>Железная руда</strong><small>Обычный ресурс</small></span>
+            <span class="resource-copy"><strong id="cargo-resource-name">Нет груза</strong><small id="cargo-resource-type">Трюм пуст</small></span>
             <strong id="ore-cargo">0</strong>
           </div>
           <div class="cargo-meter"><span id="cargo-meter-fill"></span></div>
@@ -81,15 +81,29 @@
         <div class="action-grid">
           <article class="action-card">
             <div class="action-card-icon asteroid-card-icon">◈</div>
-            <div><div class="eyebrow">ДОБЫЧА / A-01</div><h2>Железный астероид</h2><p><span class="inline-status"></span><span id="asteroid-status">Запас: 420 ед.</span></p></div>
+            <div><div class="eyebrow">ДОБЫЧА / A-01</div><h2 id="selected-asteroid-title">Железный астероид A-01</h2><p><span class="inline-status"></span><span id="asteroid-status">Запас: 420 ед.</span></p></div>
             <button id="mine-button" type="button" class="secondary-button">Отправить <span>↗</span></button>
           </article>
           <article class="action-card">
             <div class="action-card-icon market-card-icon">⌂</div>
-            <div><div class="eyebrow">ТОРГОВЛЯ / M-01</div><h2>Станция «Меридиан»</h2><p>Цена: <strong id="market-price">10 ¢ / ед.</strong></p></div>
+            <div><div class="eyebrow">ТОРГОВЛЯ / M-01</div><h2 id="selected-market-title">Станция «Меридиан»</h2><p>Цена: <strong id="market-price">10 ¢ / ед.</strong></p></div>
             <button id="sell-button" type="button" class="secondary-button">Продать <span>↗</span></button>
           </article>
         </div>
+        <section class="markets-panel panel">
+          <div class="panel-heading"><span>СРАВНЕНИЕ РЫНКОВ</span><span class="muted-copy">Цена зависит от спроса</span></div>
+          <div class="table-wrap">
+            <table class="market-table">
+              <thead><tr><th>Торговая точка</th><th>Цена / ед.</th><th>Путь от цели</th><th>Выручка*</th><th></th></tr></thead>
+              <tbody id="market-offers"></tbody>
+            </table>
+          </div>
+          <p class="table-footnote">* Расчёт для доступного объёма выбранного астероида (не более вместимости трюма).</p>
+        </section>
+        <section class="sale-report panel">
+          <div class="panel-heading"><span>ПОСЛЕДНЯЯ СДЕЛКА</span><span id="sale-report-time" class="muted-copy">Пока нет продаж</span></div>
+          <div id="sale-report-content" class="sale-report-content"><span class="report-placeholder">После первой продажи здесь появятся объём, цена за единицу и итоговая выручка.</span></div>
+        </section>
 
         <section class="log-panel panel">
           <div class="panel-heading"><span>ЖУРНАЛ ОПЕРАЦИЙ</span><span id="log-count" class="muted-copy">Последние события</span></div>
