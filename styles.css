@@ -62,3 +62,19 @@
   .module-option { flex-basis: 135px; gap: 3px; padding: 5px 7px; }
   .dock-footer { padding-top: 3px; }
 }
+
+
+.fleet-modal{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center}
+.fleet-modal.open{display:flex}
+.fleet-card{position:relative;width:min(520px,calc(100% - 28px));max-height:calc(100% - 36px);overflow:auto;padding:22px;background:#0b131d;border:1px solid rgba(143,175,199,.24);box-shadow:0 20px 80px #0009}
+.fleet-card .settings-heading h2{font-size:21px;margin:7px 0 0}
+.fleet-list{display:grid;gap:8px;margin:18px 0}
+.fleet-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px;border:1px solid rgba(143,175,199,.18);background:rgba(125,154,177,.05)}
+.fleet-row.selected{border-color:rgba(169,244,207,.65);background:rgba(169,244,207,.07)}
+.fleet-row-main{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fleet-row-main strong{font-size:12px}.fleet-row-main small{font:9px var(--mono);color:#8296a9;overflow-wrap:anywhere}
+.fleet-row-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.fleet-row-actions button{border:1px solid var(--line);background:rgba(125,154,177,.08);padding:7px 9px;font-size:9px}
+.fleet-row-actions button[aria-pressed=true]{border-color:var(--mint);color:var(--mint)}
+.fleet-buy{margin-top:4px}.fleet-note{font-size:10px;line-height:1.5;color:#7e91a4;margin:13px 0 0}
+@media(max-width:520px){.fleet-card{padding:14px}.fleet-row{grid-template-columns:1fr}.fleet-row-actions{justify-content:flex-start}.bottom-controls #fleet-button{width:44px;font-size:9px}}
