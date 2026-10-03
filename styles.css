@@ -23,3 +23,42 @@
 @media(max-width:900px){.hud-top{padding:0 14px}.ship-panel{left:12px;top:78px;width:250px}.map-object-info{right:14px}.hud-bottom{padding:0 14px;gap:16px}.bottom-company{min-width:120px}.bottom-stat:nth-of-type(4){display:none}.module-dock{padding-left:14px;padding-right:14px}.dock-footer strong{display:none}}
 @media(max-width:640px){.game{min-height:420px}.hud-top{height:58px;gap:10px;padding:0 10px}.settings-button{width:31px;height:31px}.brand-glyph{font-size:21px}.brand-mark b{font-size:9px}.brand-mark small{font-size:7px}.economy-hud{gap:10px}.hud-metric>span{font-size:7px}.hud-metric>strong{font-size:12px}.hud-divider{height:23px}.ship-panel{top:68px;left:8px;width:min(250px,calc(100vw - 16px));max-height:calc(100% - 155px);padding:12px}.map-hint{top:66px;font-size:7px;max-width:65vw;overflow:hidden}.map-object-info{top:86px;right:10px}.map-object-info strong{font-size:11px}.map-object-info>span:last-child{font-size:8px}.hud-bottom{min-height:60px;padding:0 9px;gap:12px}.bottom-company{min-width:auto}.bottom-company strong{font-size:8px}.bottom-company small{font-size:7px}.bottom-stat{min-width:auto}.bottom-stat>span{font-size:7px;letter-spacing:0;margin-bottom:5px}.bottom-stat>strong{font-size:10px}.bottom-stat:nth-of-type(3),.bottom-stat:nth-of-type(5){display:none}.bottom-controls{gap:4px}.bottom-controls button{width:29px;height:28px}.configure-overlay{inset:58px 0 60px}.configure-header{top:10px;gap:20px}.configure-header h2{font-size:12px}.module-dock{padding:10px 9px 7px}.dock-heading>div:first-child>strong{font-size:10px}.dock-energy{gap:5px;flex-direction:column;align-items:flex-end}.dock-energy span{font-size:7px}.module-categories{margin-top:8px;gap:0}.module-category{padding:8px 7px;font-size:9px}.module-category span{margin-right:3px;font-size:12px}.module-options{min-height:57px;padding:7px 0 5px}.module-option{flex-basis:145px;padding:8px}.module-option strong{font-size:9px}.module-option span{font-size:8px}.dock-footer{font-size:7px}.settings-card{padding:18px}}
 @media(max-height:620px){.hud-top{height:54px}.ship-panel{top:62px;padding:10px 12px}.ship-title-row{margin:10px 0}.ship-stats>div{padding:6px 0}.ship-target{padding:9px 0}.hud-bottom{min-height:55px}.configure-overlay{inset:54px 0 55px}.module-dock{padding-top:8px}.module-options{min-height:48px;padding:5px 0}.module-option{padding:6px 9px}.configure-header{top:8px}.map-hint{top:63px}}
+
+
+/* Keep the game HUD usable when the viewport is narrow or unusually short. */
+@media (max-width: 520px) {
+  .brand-mark small { display: none; }
+  .brand-mark { gap: 5px; }
+  .economy-hud { gap: 7px; }
+  .hud-metric > span { letter-spacing: 0; }
+  .hud-metric > strong { font-size: 11px; }
+  .hud-divider { display: none; }
+  .map-object-info { max-width: 42vw; }
+  .map-object-info > span:last-child { max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud-bottom { flex-wrap: nowrap; overflow: hidden; }
+  .bottom-company { flex: 0 0 auto; }
+  .bottom-stat { flex: 0 1 auto; }
+  .bottom-controls { flex: 0 0 auto; }
+  .configure-header { max-width: calc(100% - 16px); gap: 10px; }
+  .configure-header h2 { white-space: nowrap; }
+  .module-categories { overflow-x: auto; overflow-y: hidden; }
+  .module-category { flex: 0 0 auto; }
+}
+@media (max-height: 500px) {
+  .hud-top { height: 46px; }
+  .brand-glyph { font-size: 19px; }
+  .ship-panel { top: 52px; max-height: calc(100% - 112px); }
+  .hud-bottom { min-height: 48px; }
+  .bottom-company small { display: none; }
+  .bottom-stat > span { margin-bottom: 3px; }
+  .configure-overlay { inset: 46px 0 48px; }
+  .configure-header { top: 4px; padding: 5px 8px; }
+  .configure-header h2 { margin-top: 2px; }
+  .module-dock { padding-top: 5px; padding-bottom: 4px; }
+  .dock-heading > div:first-child { gap: 2px; }
+  .module-categories { margin-top: 4px; }
+  .module-category { padding: 4px 7px; }
+  .module-options { min-height: 38px; padding: 3px 0; }
+  .module-option { flex-basis: 135px; gap: 3px; padding: 5px 7px; }
+  .dock-footer { padding-top: 3px; }
+}
