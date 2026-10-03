@@ -390,12 +390,36 @@ function toggleSpeed() { setSpeedMultiplier(state,state.speedMultiplier===1?2:1)
 ui.settingsButton = $("#settings-button");
 ui.autoExplore = $("#auto-explore-button");
 ui.settingsButton.addEventListener("click",()=>openSettings(true));
+function shipStatus(ship) { const previous=state.ship; state.ship=ship; const label=getShipStatusLabel(state); state.ship=previous; return label; }
+function openFleet(open=true) { ui.fleetModal.classList.toggle("open",open); ui.fleetModal.setAttribute("aria-hidden",String(!open)); if(open) renderFleet(); }
+function renderFleet() {
+  ui.fleetList.replaceChildren();
+  for (const ship of state.ships) {
+    const row=document.createElement("div"); row.className="fleet-row"+(ship.id===state.selectedShipId?" selected":"");
+    const main=document.createElement("div"); main.className="fleet-row-main";
+    const title=document.createElement("strong"); title.textContent=ship.name+(ship.id===state.selectedShipId?" · ВЫБРАН":"");
+    const detail=document.createElement("small"); detail.textContent=shipStatus(ship)+" · Груз "+Math.floor(ship.cargo)+"/"+ship.cargoCapacity+" · "+(ship.autoRepeat?"автоповтор включён":"ручное управление");
+    main.append(title,detail);
+    const actions=document.createElement("div"); actions.className="fleet-row-actions";
+    const choose=document.createElement("button"); choose.type="button"; choose.textContent="Выбрать"; choose.disabled=ship.id===state.selectedShipId;
+    choose.addEventListener("click",()=>{selectShip(state,ship.id);openShipPanel(true);updateInterface();drawMap();renderFleet();});
+    const repeat=document.createElement("button"); repeat.type="button"; repeat.textContent=ship.autoRepeat?"Автоповтор: ВКЛ":"Автоповтор: ВЫКЛ"; repeat.setAttribute("aria-pressed",String(ship.autoRepeat));
+    repeat.addEventListener("click",()=>{setShipAutoRepeat(state,!ship.autoRepeat,ship.id);renderFleet();updateInterface();});
+    actions.append(choose,repeat); row.append(main,actions); ui.fleetList.append(row);
+  }
+  const cost=600+(state.ships.length-1)*400; ui.buyShipCost.textContent=state.ships.length>=3?"ЛИМИТ":cost+" ¢";
+  ui.buyShip.disabled=state.ships.length>=3||state.credits<cost;
+}
+ui.fleetButton.addEventListener("click",()=>openFleet(true));
+$("#close-fleet").addEventListener("click",()=>openFleet(false));
+$("#fleet-scrim").addEventListener("click",()=>openFleet(false));
+ui.buyShip.addEventListener("click",()=>{const result=buyShip(state);if(!result.ok){notify(result.reason);return;}selectShip(state,result.ship.id);openShipPanel(true);notify("В состав флота принят корабль «"+result.ship.name+"».");renderFleet();updateInterface();drawMap();});
 $("#close-settings").addEventListener("click",()=>openSettings(false));
 $("#settings-scrim").addEventListener("click",()=>openSettings(false));
 $("#close-ship-panel").addEventListener("click",()=>openShipPanel(false));
 $("#configure-button").addEventListener("click",()=>setConfigureMode(true));
 $("#close-configure").addEventListener("click",()=>setConfigureMode(false));
-$("#auto-explore-button").addEventListener("click",()=>{autoExplore=!autoExplore;updateInterface();notify(autoExplore?"Автоисследование включено. Корабль сам выбирает астероиды и продаёт груз.":"Автоисследование выключено.");runAutoExplore();});
+$("#auto-explore-button").addEventListener("click",()=>{ const ship=activeShip(); setShipAutoRepeat(state,!ship.autoRepeat,ship.id); updateInterface(); notify(ship.autoRepeat?"Автоповтор включён для «"+ship.name+"».":"Автоповтор выключен для «"+ship.name+"»."); runAutoExplore(); });
 $("#pause-button").addEventListener("click",togglePause);
 $("#speed-button").addEventListener("click",toggleSpeed);
 $("#settings-pause").addEventListener("click",togglePause);
@@ -410,6 +434,7 @@ canvas.addEventListener("click",handleMapClick);
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"){
     if(configuring)setConfigureMode(false);
+    else if(ui.fleetModal.classList.contains("open"))openFleet(false);
     else if(ui.settings.classList.contains("open"))openSettings(false);
     else openShipPanel(false);
   }
@@ -419,7 +444,7 @@ document.addEventListener("keydown",event=>{
 });
 function frame(now) {
   const delta=Math.min((now-lastFrame)/1000,CONFIG.simulation.maxRealDelta);
-  lastFrame=now;stepSimulation(state,delta);
+  lastFrame=now;stepSimulation(state,delta); syncActiveShip();
   if(state.ship.targetId!==lastTargetId){lastTargetId=state.ship.targetId;tripStartDistance=getDistanceToTarget(state)||1;}
   runAutoExplore();drawMap();
   if(now-lastUiUpdate>150){updateInterface();lastUiUpdate=now;}
