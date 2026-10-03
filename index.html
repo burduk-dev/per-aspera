@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d16">
+  <title>Per aspera ad asteroid</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Per aspera ad asteroid — главная">
+        <span class="brand-mark" aria-hidden="true">✳</span>
+        <span><strong>PER ASPERA</strong><small>AD ASTEROID</small></span>
+      </a>
+      <div class="topbar-center"><span class="live-dot"></span><span id="sim-status">СИСТЕМА АКТИВНА</span></div>
+      <div class="topbar-right">
+        <span class="time-label">ВРЕМЯ СИСТЕМЫ</span>
+        <strong id="game-clock">00:00</strong>
+        <button id="pause-button" class="icon-button" type="button" aria-pressed="false">Ⅱ <span>Пауза</span></button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <section class="capital-panel panel">
+          <div class="eyebrow">ДОСТУПНЫЕ СРЕДСТВА</div>
+          <div class="capital-value"><span class="credit-symbol">¢</span><strong id="credits">1 000</strong></div>
+          <div class="capital-foot"><span class="status-dot"></span> Компания зарегистрирована</div>
+        </section>
+
+        <section class="panel section-panel">
+          <div class="panel-heading"><span>01 / ФЛОТ</span><span class="count-chip">01 / 03</span></div>
+          <button id="ship-card" class="ship-card selected" type="button">
+            <span class="ship-mini" aria-hidden="true">◆</span>
+            <span class="ship-card-copy"><strong>«Пионер»</strong><small id="ship-state">Ожидает приказа</small></span>
+            <span class="selection-mark">●</span>
+          </button>
+          <div class="stat-list">
+            <div><span>Груз</span><strong id="cargo-value">0 / 30 ед.</strong></div>
+            <div><span>Скорость</span><strong id="speed-value">—</strong></div>
+            <div><span>Добыча</span><strong id="mining-value">1 ед./с</strong></div>
+          </div>
+        </section>
+
+        <section class="panel section-panel">
+          <div class="panel-heading"><span>02 / ЦЕЛЬ</span><span class="tiny-icon">⌖</span></div>
+          <div id="target-name" class="target-title">Нет назначения</div>
+          <p id="target-description" class="muted-copy">Выберите объект на карте, чтобы отдать приказ кораблю.</p>
+          <div class="target-progress"><span id="target-progress-bar"></span></div>
+          <div id="target-progress-label" class="progress-label">Ожидание команды</div>
+        </section>
+
+        <section class="panel section-panel">
+          <div class="panel-heading"><span>03 / ГРУЗ</span><span class="tiny-icon">▤</span></div>
+          <div class="resource-row">
+            <span class="resource-icon common" aria-hidden="true">▪</span>
+            <span class="resource-copy"><strong>Железная руда</strong><small>Обычный ресурс</small></span>
+            <strong id="ore-cargo">0</strong>
+          </div>
+          <div class="cargo-meter"><span id="cargo-meter-fill"></span></div>
+          <div class="resource-note"><span id="cargo-percent">0%</span><span>Вместимость трюма</span></div>
+        </section>
+
+        <div class="sidebar-tip"><span class="tip-icon">i</span><p><strong>Совет диспетчера</strong><br>Выберите астероид, чтобы начать добычу. Корабль автоматически вернётся на станцию, когда трюм заполнится.</p></div>
+      </aside>
+
+      <section class="main-content">
+        <div class="view-heading">
+          <div><div class="eyebrow">СЕКТОР 01 · БЛИЖНИЙ ПОЯС</div><h1>Операционная карта</h1><p>Назначайте цели. Корабли выполнят приказ автоматически.</p></div>
+          <div class="map-legend"><span><i class="legend-dot ship-dot"></i>Корабль</span><span><i class="legend-dot asteroid-dot"></i>Астероид</span><span><i class="legend-dot station-dot"></i>Торговая точка</span></div>
+        </div>
+
+        <div class="map-frame">
+          <div class="map-topline"><span><span class="live-dot"></span> LIVE FEED</span><span id="map-coordinates">X 000 · Y 000</span><span>СЕТКА НАВИГАЦИИ / 01</span></div>
+          <canvas id="space-map" width="1200" height="760" aria-label="Карта системы. Нажмите на астероид или торговую точку, чтобы назначить цель кораблю."></canvas>
+          <div class="map-bottomline"><span>КУРС: <strong id="course-label">НЕ ЗАДАН</strong></span><span>СКОРОСТЬ СИМУЛЯЦИИ <strong id="speed-multiplier">1×</strong></span></div>
+        </div>
+
+        <div class="action-grid">
+          <article class="action-card">
+            <div class="action-card-icon asteroid-card-icon">◈</div>
+            <div><div class="eyebrow">ДОБЫЧА / A-01</div><h2>Железный астероид</h2><p><span class="inline-status"></span><span id="asteroid-status">Запас: 420 ед.</span></p></div>
+            <button id="mine-button" type="button" class="secondary-button">Отправить <span>↗</span></button>
+          </article>
+          <article class="action-card">
+            <div class="action-card-icon market-card-icon">⌂</div>
+            <div><div class="eyebrow">ТОРГОВЛЯ / M-01</div><h2>Станция «Меридиан»</h2><p>Цена: <strong id="market-price">10 ¢ / ед.</strong></p></div>
+            <button id="sell-button" type="button" class="secondary-button">Продать <span>↗</span></button>
+          </article>
+        </div>
+
+        <section class="log-panel panel">
+          <div class="panel-heading"><span>ЖУРНАЛ ОПЕРАЦИЙ</span><span id="log-count" class="muted-copy">Последние события</span></div>
+          <div id="event-log" class="event-log" aria-live="polite"><div class="log-entry"><span class="log-time">00:00</span><span class="log-dot"></span><span>Система управления готова. Назначьте первую цель.</span></div></div>
+        </section>
+        <footer class="footer-line"><span>PER ASPERA AD ASTEROID <span class="footer-divider">/</span> PROTOTYPE 0.1</span><span>АВТОНОМНАЯ ЛОГИСТИЧЕСКАЯ СИСТЕМА</span></footer>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
