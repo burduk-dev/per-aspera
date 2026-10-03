@@ -234,6 +234,12 @@ function drawBackground() {
   }
   ctx.globalAlpha = 1;
 }
+function mapLabelFont(baseSize, weight = "") {
+  // Keep map labels readable: zooming in shrinks their screen size, zooming out enlarges it.
+  const screenSize = Math.max(7, Math.min(18, baseSize / camera.zoom));
+  const worldSize = screenSize / camera.zoom;
+  return (weight ? weight + " " : "") + worldSize + "px 'Science Gothic', sans-serif";
+}
 function drawSystem() {
   const { x: cx, y: cy, radius } = CONFIG.system.star;
   ctx.save();
@@ -259,7 +265,7 @@ function drawSystem() {
     }
     ctx.globalAlpha = 1;
     if (camera.zoom > .19) {
-      ctx.fillStyle = "#718a9c"; ctx.font = "12px 'DotGothic16', monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = "#718a9c"; ctx.font = mapLabelFont(12); ctx.textAlign = "center";
       ctx.fillText(belt.name.toUpperCase(), cx + (belt.inner + belt.outer) / 2, cy - (belt.inner + belt.outer) / 2);
     }
   }
@@ -269,7 +275,7 @@ function drawSystem() {
   ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, radius * 3.2, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#ffe4a8"; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = "rgba(255,237,194,.65)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, radius + 9, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = "#f8dca5"; ctx.font = "13px 'DotGothic16', monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = "#f8dca5"; ctx.font = mapLabelFont(13); ctx.textAlign = "center";
   ctx.fillText(CONFIG.system.star.name.toUpperCase(), cx, cy + radius + 28);
   for (const planet of CONFIG.system.planets) {
     const px = cx + Math.cos(planet.phase) * planet.orbit;
@@ -280,7 +286,7 @@ function drawSystem() {
     if (planet.id === "planet-04") {
       ctx.strokeStyle = "#c6a7a0"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(px, py, planet.radius * 1.8, planet.radius * .62, -.3, 0, Math.PI * 2); ctx.stroke();
     }
-    ctx.fillStyle = "#a9bdcb"; ctx.font = "11px 'DotGothic16', monospace"; ctx.textAlign = "center";
+    ctx.fillStyle = "#a9bdcb"; ctx.font = mapLabelFont(11); ctx.textAlign = "center";
     ctx.fillText(planet.name.toUpperCase(), px, py + planet.radius + 20);
   }
   ctx.restore();
@@ -302,8 +308,8 @@ function drawAsteroid(asteroid) {
   const points = [[-18,-5],[-12,-19],[2,-22],[17,-12],[22,3],[11,18],[-5,20],[-21,9]];
   points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = color; ctx.fillRect(-8,-6,5,4); ctx.fillRect(7,5,3,3); ctx.fillRect(1,-15,3,3);
-  ctx.fillStyle = "#a5b7c4"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center"; ctx.fillText(asteroid.label,0,36);
-  ctx.fillStyle = color; ctx.font = "8px 'DotGothic16', monospace"; ctx.fillText(asteroid.reserve > 0 ? Math.ceil(asteroid.reserve) + " u" : "EMPTY",0,48);
+  ctx.fillStyle = "#a5b7c4"; ctx.font = mapLabelFont(10); ctx.textAlign = "center"; ctx.fillText(asteroid.label,0,36);
+  ctx.fillStyle = color; ctx.font = mapLabelFont(8); ctx.fillText(asteroid.reserve > 0 ? Math.ceil(asteroid.reserve) + " u" : "EMPTY",0,48);
   ctx.restore();
 }
 function drawMarket(market) {
@@ -316,8 +322,8 @@ function drawMarket(market) {
   ctx.fillStyle = "#263748"; ctx.strokeStyle = "#c5d1dd";
   ctx.beginPath(); ctx.moveTo(-13,-2); ctx.lineTo(-7,-13); ctx.lineTo(8,-13); ctx.lineTo(14,-2); ctx.lineTo(14,9); ctx.lineTo(-13,9); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = "#d5dfe8"; ctx.fillRect(-6,-8,4,4); ctx.fillRect(3,-8,4,4); ctx.fillRect(-2,2,4,6);
-  ctx.fillStyle = "#a9b9c9"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center"; ctx.fillText(market.label,0,37);
-  ctx.fillStyle = "#a8bacb"; ctx.font = "8px 'DotGothic16', monospace"; ctx.fillText(getSalePrice(state,market.id,selectedAsteroid().resourceId).toFixed(1)+" CR",0,49);
+  ctx.fillStyle = "#a9b9c9"; ctx.font = mapLabelFont(10); ctx.textAlign = "center"; ctx.fillText(market.label,0,37);
+  ctx.fillStyle = "#a8bacb"; ctx.font = mapLabelFont(8); ctx.fillText(getSalePrice(state,market.id,selectedAsteroid().resourceId).toFixed(1)+" CR",0,49);
   ctx.restore();
 }
 function getSlotLayout() {
@@ -358,12 +364,12 @@ function drawConfiguredShip() {
     ctx.fillRect(-slot.size/2,-slot.size/2,slot.size,slot.size); ctx.strokeRect(-slot.size/2,-slot.size/2,slot.size,slot.size);
     ctx.fillStyle = color; ctx.font = "bold 9px 'DotGothic16', monospace"; ctx.textAlign = "center";
     ctx.fillText(cell.moduleId ? shortNames[cell.moduleId] : "EMPTY",0,-2);
-    ctx.fillStyle = "#d5dfe8"; ctx.font = "8px 'DotGothic16', monospace"; ctx.fillText(def ? "LV "+cell.moduleLevel : categoryNames[cell.compartment].toUpperCase(),0,10);
+    ctx.fillStyle = "#d5dfe8"; ctx.font = mapLabelFont(8); ctx.fillText(def ? "LV "+cell.moduleLevel : categoryNames[cell.compartment].toUpperCase(),0,10);
     ctx.restore();
   }
   ctx.save();
   ctx.strokeStyle = "rgba(174,189,203,.15)"; ctx.setLineDash([3,8]); ctx.beginPath(); ctx.arc(600,350, Math.max(90, Math.min(230, slots.length*17)), 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle = "#a8bacb"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = "#a8bacb"; ctx.font = mapLabelFont(10); ctx.textAlign = "center";
   ctx.fillText("СХЕМА МОДУЛЬНЫХ СИСТЕМ",600,350+Math.max(90, Math.min(230, slots.length*17))+24);
   ctx.restore();
 }
@@ -374,10 +380,10 @@ function drawShip() {
     const moving = ship.state.startsWith("travel-to");
     drawShipAt(ship.x,ship.y,moving?Math.atan2(ship.vy,ship.vx):0,selected?1:.78,selected && shipPanelOpen);
     ctx.fillStyle = selected ? "#d6e0e9" : "#8199a8";
-    ctx.font = "600 9px 'DotGothic16', monospace"; ctx.textAlign = "center";
+    ctx.font = mapLabelFont(9, "600"); ctx.textAlign = "center";
     ctx.fillText(ship.name.toUpperCase(),ship.x,ship.y+31);
     if (selected) {
-      ctx.fillStyle = "#8199a8"; ctx.font = "8px 'DotGothic16', monospace";
+      ctx.fillStyle = "#8199a8"; ctx.font = mapLabelFont(8);
       ctx.fillText(Math.floor(ship.cargo)+" / "+ship.cargoCapacity+" CARGO",ship.x,ship.y+43);
     }
     if (selected && shipPanelOpen) {
