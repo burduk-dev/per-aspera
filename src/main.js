@@ -171,7 +171,7 @@ function updateInterface() {
   ui.speedValue.innerHTML = Math.round(ship.travelSpeed) + ' <small>ед./с</small>';
   ui.moduleCount.textContent = String(stats.modulesCount);
   ui.powerLabel.textContent = stats.power < 0 ? "НЕХВАТКА ЭНЕРГИИ" : "ЭНЕРГИЯ СТАБИЛЬНА";
-  ui.powerLabel.style.color = stats.power < 0 ? "#ff938e" : "var(--mint)";
+  ui.powerLabel.style.color = stats.power < 0 ? "#aebdcb" : "var(--mint)";
   ui.targetName.textContent = target ? (target.resourceId ? target.label + " · " + getResourceName(target.resourceId) : "Станция «" + target.name + "»") : "Нет назначения";
   ui.targetDescription.textContent = target ? (ship.state === "mining" ? "Добыча идёт автоматически. Корабль вернётся при заполнении трюма." : "Расстояние до цели: " + Math.ceil(getDistanceToTarget(state) ?? 0) + " ед.") : "Выберите объект на карте.";
   ui.targetProgress.style.width = target ? (ship.state === "mining" ? Math.min(100, ratio * 100) : Math.max(5, Math.min(100, (1 - (getDistanceToTarget(state) ?? 0) / Math.max(tripStartDistance, 1)) * 100))) + "%" : "0%";
@@ -288,12 +288,12 @@ function drawMarket(market) {
     ctx.strokeStyle = "rgba(114,217,232,.55)"; ctx.beginPath(); ctx.arc(0,0,42,0,Math.PI*2); ctx.stroke();
   }
   ctx.fillStyle = "rgba(114,217,232,.055)"; ctx.beginPath(); ctx.arc(0,0,30,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle = "#72d9e8"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.stroke();
-  ctx.fillStyle = "#16333c"; ctx.strokeStyle = "#91eaf1";
+  ctx.strokeStyle = "#a8bacb"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = "#263748"; ctx.strokeStyle = "#c5d1dd";
   ctx.beginPath(); ctx.moveTo(-13,-2); ctx.lineTo(-7,-13); ctx.lineTo(8,-13); ctx.lineTo(14,-2); ctx.lineTo(14,9); ctx.lineTo(-13,9); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#b7f7fa"; ctx.fillRect(-6,-8,4,4); ctx.fillRect(3,-8,4,4); ctx.fillRect(-2,2,4,6);
-  ctx.fillStyle = "#a6bac8"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center"; ctx.fillText(market.label,0,37);
-  ctx.fillStyle = "#72d9e8"; ctx.font = "8px 'DotGothic16', monospace"; ctx.fillText(getSalePrice(state,market.id,selectedAsteroid().resourceId).toFixed(1)+" CR",0,49);
+  ctx.fillStyle = "#d5dfe8"; ctx.fillRect(-6,-8,4,4); ctx.fillRect(3,-8,4,4); ctx.fillRect(-2,2,4,6);
+  ctx.fillStyle = "#a9b9c9"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center"; ctx.fillText(market.label,0,37);
+  ctx.fillStyle = "#a8bacb"; ctx.font = "8px 'DotGothic16', monospace"; ctx.fillText(getSalePrice(state,market.id,selectedAsteroid().resourceId).toFixed(1)+" CR",0,49);
   ctx.restore();
 }
 function getSlotLayout() {
@@ -312,12 +312,12 @@ function getSlotLayout() {
 function drawShipAt(x,y,angle,zoom,selected=false) {
   // Placeholder rendering only: replace this abstract navigation marker with final art later.
   ctx.save(); ctx.translate(x,y); ctx.scale(zoom,zoom);
-  ctx.strokeStyle = selected ? "#d2ffe9" : "rgba(169,244,207,.78)";
+  ctx.strokeStyle = selected ? "#d3dce5" : "rgba(169,244,207,.78)";
   ctx.lineWidth = selected ? 2 : 1.25;
   ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.stroke();
   ctx.strokeStyle = "rgba(169,244,207,.25)";
   ctx.setLineDash([2,4]); ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle = "#a9f4cf"; ctx.beginPath(); ctx.arc(0,0,3.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#9eafc1"; ctx.beginPath(); ctx.arc(0,0,3.5,0,Math.PI*2); ctx.fill();
   ctx.fillStyle = "rgba(169,244,207,.7)"; ctx.fillRect(-26,-1,7,2); ctx.fillRect(19,-1,7,2);
   ctx.restore();
 }
@@ -327,19 +327,19 @@ function drawConfiguredShip() {
   for (const slot of slots) {
     const cell = slot.cell, selected = cell.x+","+cell.y === selectedSlot;
     const def = moduleLevelDefinition(cell);
-    const color = cell.compartment === "mining" ? "#ffc879" : cell.compartment === "cargo" ? "#72d9e8" : cell.compartment === "engine" ? "#b8a0ff" : "#a9f4cf";
+    const color = cell.compartment === "mining" ? "#c0cbd6" : cell.compartment === "cargo" ? "#a8bacb" : cell.compartment === "engine" ? "#a5b5c7" : "#9eafc1";
     ctx.save(); ctx.translate(slot.x,slot.y);
     ctx.fillStyle = selected ? "rgba(169,244,207,.23)" : "rgba(7,14,21,.88)";
-    ctx.strokeStyle = selected ? "#c6ffe4" : color; ctx.lineWidth = selected ? 2.5 : 1.2;
+    ctx.strokeStyle = selected ? "#d4dfe9" : color; ctx.lineWidth = selected ? 2.5 : 1.2;
     ctx.fillRect(-slot.size/2,-slot.size/2,slot.size,slot.size); ctx.strokeRect(-slot.size/2,-slot.size/2,slot.size,slot.size);
     ctx.fillStyle = color; ctx.font = "bold 9px 'DotGothic16', monospace"; ctx.textAlign = "center";
     ctx.fillText(cell.moduleId ? shortNames[cell.moduleId] : "EMPTY",0,-2);
-    ctx.fillStyle = "#d5e3eb"; ctx.font = "8px 'DotGothic16', monospace"; ctx.fillText(def ? "LV "+cell.moduleLevel : categoryNames[cell.compartment].toUpperCase(),0,10);
+    ctx.fillStyle = "#d5dfe8"; ctx.font = "8px 'DotGothic16', monospace"; ctx.fillText(def ? "LV "+cell.moduleLevel : categoryNames[cell.compartment].toUpperCase(),0,10);
     ctx.restore();
   }
   ctx.save();
   ctx.strokeStyle = "rgba(169,244,207,.15)"; ctx.setLineDash([3,8]); ctx.beginPath(); ctx.arc(600,350, Math.max(90, Math.min(230, slots.length*17)), 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle = "#a8c5d2"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = "#a8bacb"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center";
   ctx.fillText("СХЕМА МОДУЛЬНЫХ СИСТЕМ",600,350+Math.max(90, Math.min(230, slots.length*17))+24);
   ctx.restore();
 }
@@ -349,7 +349,7 @@ function drawShip() {
     const selected = ship.id === state.selectedShipId;
     const moving = ship.state.startsWith("travel-to");
     drawShipAt(ship.x,ship.y,moving?Math.atan2(ship.vy,ship.vx):0,selected?1:.78,selected && shipPanelOpen);
-    ctx.fillStyle = selected ? "#d6e8e6" : "#8199a8";
+    ctx.fillStyle = selected ? "#d6e0e9" : "#8199a8";
     ctx.font = "600 9px 'DotGothic16', monospace"; ctx.textAlign = "center";
     ctx.fillText(ship.name.toUpperCase(),ship.x,ship.y+31);
     if (selected) {
@@ -415,6 +415,13 @@ function handleMapClick(event) {
   if (asteroid) { state.selectedAsteroidId=asteroid.id; issueCommand(asteroid.id); return; }
   const market = state.markets.find(item=>Math.hypot(point.x-item.x,point.y-item.y)<34);
   if (market) { state.selectedMarketId=market.id; issueCommand(market.id); return; }
+  if (state.selectedShipId != null) {
+    deselectShip(state);
+    openShipPanel(false);
+    if (configuring) setConfigureMode(false);
+    updateInterface();
+    drawMap();
+  }
 }
 function renderModuleDock() {
   const cell = cellAtKey(selectedSlot);
@@ -513,7 +520,6 @@ function renderFleet() {
   ui.buyShip.disabled=state.ships.length>=3||state.credits<cost;
 }
 ui.fleetButton.addEventListener("click",()=>openFleet(true));
-$("#deselect-ship").addEventListener("click",()=>{deselectShip(state);openShipPanel(false);openFleet(false);setConfigureMode(false);updateInterface();drawMap();notify("Режим без корабля: команды кораблям не назначаются.");});
 $("#close-fleet").addEventListener("click",()=>openFleet(false));
 $("#fleet-scrim").addEventListener("click",()=>openFleet(false));
 ui.buyShip.addEventListener("click",()=>{const result=buyShip(state);if(!result.ok){notify(result.reason);return;}selectShip(state,result.ship.id);openShipPanel(true);notify("В состав флота принят корабль «"+result.ship.name+"».");renderFleet();updateInterface();drawMap();});
