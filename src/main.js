@@ -308,8 +308,11 @@ function drawAsteroid(asteroid) {
   const points = [[-18,-5],[-12,-19],[2,-22],[17,-12],[22,3],[11,18],[-5,20],[-21,9]];
   points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = color; ctx.fillRect(-8,-6,5,4); ctx.fillRect(7,5,3,3); ctx.fillRect(1,-15,3,3);
-  // Asteroids have no names; keep only the remaining resource amount visible.
-  ctx.fillStyle = color; ctx.font = mapLabelFont(8); ctx.fillText(asteroid.reserve > 0 ? Math.ceil(asteroid.reserve) + " u" : "EMPTY",0,48);
+  // Show the remaining resource only when zoomed in close; center it on the asteroid.
+  if (camera.zoom >= 0.5) {
+    ctx.fillStyle = color; ctx.font = mapLabelFont(8); ctx.textAlign = "center";
+    ctx.fillText(asteroid.reserve > 0 ? Math.ceil(asteroid.reserve) + " u" : "EMPTY", 0, 48);
+  }
   ctx.restore();
 }
 function drawMarket(market) {
