@@ -13,26 +13,41 @@ function cloneCell(cell) {
   return { x: cell.x, y: cell.y, compartment: cell.compartment, level: cell.level, moduleId: cell.moduleId, moduleLevel: cell.moduleLevel };
 }
 
-export function createDefaultDesign() {
+export function createTemplateDesign(templateId = "standard") {
+  const templates = {
+    light: {
+      name: "Лёгкий добытчик",
+      width: 6, height: 1, x: 0, y: 2,
+      roles: [["mining", "mining", 1], ["cargo", "storage", 1], ["engine", "engine", 1], ["reactor", "reactor", 1], ["cargo", null, 1], ["cargo", null, 1]]
+    },
+    standard: {
+      name: "Стандартный добытчик",
+      width: 4, height: 2, x: 1, y: 1,
+      roles: [["mining", "mining", 1], ["cargo", "storage", 1], ["engine", "engine", 1], ["reactor", "reactor", 1], ["cargo", null, 1], ["cargo", null, 1], ["cargo", null, 1], ["cargo", null, 1]]
+    },
+    hauler: {
+      name: "Грузовой добытчик",
+      width: 4, height: 3, x: 1, y: 1,
+      roles: [["mining", "mining", 1], ["cargo", "storage", 2], ["engine", "engine", 1], ["reactor", "reactor", 2], ...Array.from({ length: 8 }, () => ["cargo", null, 1])]
+    }
+  };
+  const template = templates[templateId] ?? templates.standard;
   const cells = [];
-  const roles = [
-    ["mining", "mining", 1],
-    ["cargo", "storage", 1],
-    ["engine", "engine", 1],
-    ["reactor", "reactor", 1],
-    ["cargo", null, 1],
-    ["cargo", null, 1],
-    ["cargo", null, 1],
-    ["cargo", null, 1]
-  ];
-  let i = 0;
-  for (let y = 1; y <= 2; y += 1) {
-    for (let x = 1; x <= 4; x += 1) {
-      const [compartment, moduleId, moduleLevel] = roles[i++];
-      cells.push({ x, y, compartment, level: 1, moduleId, moduleLevel });
+  let index = 0;
+  for (let y = 0; y < template.height; y += 1) {
+    for (let x = 0; x < template.width; x += 1) {
+      const [compartment, moduleId, moduleLevel] = template.roles[index++];
+      cells.push({
+        x: template.x + x, y: template.y + y,
+        compartment, level: 1, moduleId, moduleLevel
+      });
     }
   }
-  return { name: "Стандартный добытчик", cells, selectedCell: "1,1" };
+  return { name: template.name, templateId, cells, selectedCell: cells[0] ? cellKey(cells[0].x, cells[0].y) : null };
+}
+
+export function createDefaultDesign() {
+  return createTemplateDesign("standard");
 }
 
 export function cloneDesign(design) {
