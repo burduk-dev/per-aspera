@@ -6,6 +6,7 @@ import {
   calculateDesignStats,
   configureCell,
   createDefaultDesign,
+  createTemplateDesign,
   getCell,
   removeHullCell,
   validateDesign
@@ -22,6 +23,21 @@ test("default compact grid design is connected, viable and affordable at the sta
   assert.equal(validation.stats.cargoCapacity, 30);
   assert.equal(validation.stats.miningRate, 1);
   assert.equal(validation.stats.travelSpeed, 112);
+});
+
+test("all three hull templates are connected and have valid required modules", () => {
+  const light = createTemplateDesign("light");
+  const standard = createTemplateDesign("standard");
+  const hauler = createTemplateDesign("hauler");
+  assert.equal(light.cells.length, 6);
+  assert.equal(standard.cells.length, 8);
+  assert.equal(hauler.cells.length, 12);
+  assert.equal(validateDesign(light, 1000).valid, true);
+  assert.equal(validateDesign(standard, 1000).valid, true);
+  assert.equal(validateDesign(hauler, 2000).valid, true);
+  assert.equal(calculateDesignStats(light).cost, 770);
+  assert.equal(calculateDesignStats(standard).cost, 924);
+  assert.equal(calculateDesignStats(hauler).cost, 1428);
 });
 
 test("free construction accepts only grid cells connected by a side", () => {
