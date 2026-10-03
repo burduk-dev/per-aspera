@@ -395,6 +395,18 @@ function drawShip() {
     }
   }
 }
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+    ctx.imageSmoothingEnabled = true;
+  }
+}
+window.addEventListener("resize", resizeCanvas);
+
 function drawMap() {
   ctx.setTransform(1,0,0,1,0,0);
   ctx.fillStyle = "#101720"; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -639,7 +651,8 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 function initialize() {
-  ctx.imageSmoothingEnabled=false;
+  resizeCanvas();
+  ctx.imageSmoothingEnabled=true;
   updateInterface();
   ui.objectKicker.textContent="СЕКТОР 01";ui.objectName.textContent="Пояс астероидов";ui.objectDetail.textContent="5 планет · 3 пояса астероидов · 1 станция";
   requestAnimationFrame(frame);
