@@ -395,11 +395,22 @@ export function selectShip(state, shipId) {
   return { ok: true, ship };
 }
 
-export function commandShip(state, targetId, shipId = state.selectedShipId ?? state.ships?.[0]?.id) {
+export function commandShip(state, targetId, shipId = state.selectedShipId) {
+  if (!shipId || !(state.ships ?? []).some(ship => ship.id === shipId)) {
+    return { ok: false, reason: "Сначала выберите корабль или выйдите из режима без корабля." };
+  }
   return withShip(state, shipId, () => commandCurrentShip(state, targetId));
 }
 
-export function sellCargo(state, marketId = null, shipId = state.selectedShipId ?? state.ships?.[0]?.id) {
+export function deselectShip(state) {
+  state.selectedShipId = null;
+  return { ok: true };
+}
+
+export function sellCargo(state, marketId = null, shipId = state.selectedShipId) {
+  if (!shipId || !(state.ships ?? []).some(ship => ship.id === shipId)) {
+    return { ok: false, reason: "Сначала выберите корабль." };
+  }
   return withShip(state, shipId, () => sellCurrentCargo(state, marketId));
 }
 
@@ -424,7 +435,8 @@ export function buyShip(state) {
   return { ok: true, ship, cost };
 }
 
-export function setShipAutoRepeat(state, enabled, shipId = state.selectedShipId ?? state.ships?.[0]?.id) {
+export function setShipAutoRepeat(state, enabled, shipId = state.selectedShipId) {
+  if (!shipId || !(state.ships ?? []).some(ship => ship.id === shipId)) return { ok: false, reason: "Сначала выберите корабль." };
   return withShip(state, shipId, () => {
     state.ship.autoRepeat = Boolean(enabled);
     addEvent(state,"fleet",`Автоповтор маршрута для «${state.ship.name}»: ${state.ship.autoRepeat ? "включён" : "выключен"}.`);
