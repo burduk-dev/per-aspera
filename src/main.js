@@ -197,12 +197,12 @@ function runAutoExplore() {
 
 function drawBackground() {
   const w = CONFIG.map.width, h = CONFIG.map.height;
-  ctx.fillStyle = "#070b12"; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "#101720"; ctx.fillRect(0, 0, w, h);
   const star = CONFIG.system.star;
   const nebula = ctx.createRadialGradient(star.x, star.y, 5, star.x, star.y, 3400);
   nebula.addColorStop(0, "rgba(25,55,77,.24)");
   nebula.addColorStop(.42, "rgba(14,31,46,.12)");
-  nebula.addColorStop(1, "rgba(7,11,18,0)");
+  nebula.addColorStop(1, "rgba(16,23,32,0)");
   ctx.fillStyle = nebula; ctx.fillRect(0, 0, w, h);
   for (const dot of stars) {
     ctx.globalAlpha = dot.alpha; ctx.fillStyle = "#a9c7d9";
@@ -263,7 +263,7 @@ function drawSystem() {
 }
 function drawRoute() {
   const target = currentTarget(); if (!target || configuring) return;
-  ctx.save(); ctx.strokeStyle = "rgba(169,244,207,.55)"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 9]);
+  ctx.save(); ctx.strokeStyle = "rgba(174,189,203,.55)"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 9]);
   ctx.beginPath(); ctx.moveTo(state.ship.x, state.ship.y); ctx.lineTo(target.x, target.y); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
 }
 function drawAsteroid(asteroid) {
@@ -312,13 +312,13 @@ function getSlotLayout() {
 function drawShipAt(x,y,angle,zoom,selected=false) {
   // Placeholder rendering only: replace this abstract navigation marker with final art later.
   ctx.save(); ctx.translate(x,y); ctx.scale(zoom,zoom);
-  ctx.strokeStyle = selected ? "#d3dce5" : "rgba(169,244,207,.78)";
+  ctx.strokeStyle = selected ? "#d3dce5" : "rgba(174,189,203,.78)";
   ctx.lineWidth = selected ? 2 : 1.25;
   ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.stroke();
-  ctx.strokeStyle = "rgba(169,244,207,.25)";
+  ctx.strokeStyle = "rgba(174,189,203,.25)";
   ctx.setLineDash([2,4]); ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
   ctx.fillStyle = "#9eafc1"; ctx.beginPath(); ctx.arc(0,0,3.5,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = "rgba(169,244,207,.7)"; ctx.fillRect(-26,-1,7,2); ctx.fillRect(19,-1,7,2);
+  ctx.fillStyle = "rgba(174,189,203,.7)"; ctx.fillRect(-26,-1,7,2); ctx.fillRect(19,-1,7,2);
   ctx.restore();
 }
 function drawConfiguredShip() {
@@ -329,7 +329,7 @@ function drawConfiguredShip() {
     const def = moduleLevelDefinition(cell);
     const color = cell.compartment === "mining" ? "#c0cbd6" : cell.compartment === "cargo" ? "#a8bacb" : cell.compartment === "engine" ? "#a5b5c7" : "#9eafc1";
     ctx.save(); ctx.translate(slot.x,slot.y);
-    ctx.fillStyle = selected ? "rgba(169,244,207,.23)" : "rgba(7,14,21,.88)";
+    ctx.fillStyle = selected ? "rgba(174,189,203,.23)" : "rgba(7,14,21,.88)";
     ctx.strokeStyle = selected ? "#d4dfe9" : color; ctx.lineWidth = selected ? 2.5 : 1.2;
     ctx.fillRect(-slot.size/2,-slot.size/2,slot.size,slot.size); ctx.strokeRect(-slot.size/2,-slot.size/2,slot.size,slot.size);
     ctx.fillStyle = color; ctx.font = "bold 9px 'DotGothic16', monospace"; ctx.textAlign = "center";
@@ -338,7 +338,7 @@ function drawConfiguredShip() {
     ctx.restore();
   }
   ctx.save();
-  ctx.strokeStyle = "rgba(169,244,207,.15)"; ctx.setLineDash([3,8]); ctx.beginPath(); ctx.arc(600,350, Math.max(90, Math.min(230, slots.length*17)), 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = "rgba(174,189,203,.15)"; ctx.setLineDash([3,8]); ctx.beginPath(); ctx.arc(600,350, Math.max(90, Math.min(230, slots.length*17)), 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
   ctx.fillStyle = "#a8bacb"; ctx.font = "10px 'DotGothic16', monospace"; ctx.textAlign = "center";
   ctx.fillText("СХЕМА МОДУЛЬНЫХ СИСТЕМ",600,350+Math.max(90, Math.min(230, slots.length*17))+24);
   ctx.restore();
@@ -357,19 +357,19 @@ function drawShip() {
       ctx.fillText(Math.floor(ship.cargo)+" / "+ship.cargoCapacity+" CARGO",ship.x,ship.y+43);
     }
     if (selected && shipPanelOpen) {
-      ctx.strokeStyle = "rgba(169,244,207,.75)"; ctx.setLineDash([3,5]);
+      ctx.strokeStyle = "rgba(174,189,203,.75)"; ctx.setLineDash([3,5]);
       ctx.beginPath(); ctx.arc(ship.x,ship.y,40,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
     }
   }
 }
 function drawMap() {
   ctx.setTransform(1,0,0,1,0,0);
-  ctx.fillStyle = "#070b12"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#101720"; ctx.fillRect(0,0,canvas.width,canvas.height);
   if (configuring) {
     const glow = ctx.createRadialGradient(600,350,25,600,350,300);
-    glow.addColorStop(0,"rgba(80,160,146,.1)"); glow.addColorStop(1,"rgba(7,11,18,0)");
+    glow.addColorStop(0,"rgba(110,130,150,.1)"); glow.addColorStop(1,"rgba(16,23,32,0)");
     ctx.fillStyle = glow; ctx.fillRect(250,80,700,560);
-    ctx.fillStyle = "rgba(169,244,207,.035)"; ctx.fillRect(0,0,1200,760);
+    ctx.fillStyle = "rgba(174,189,203,.035)"; ctx.fillRect(0,0,1200,760);
     drawConfiguredShip();
     return;
   }
