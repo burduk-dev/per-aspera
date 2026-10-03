@@ -38,7 +38,7 @@ test("mining is limited by free cargo space and asteroid reserves", () => {
 
   assert.ok(state.ship.cargo <= state.ship.cargoCapacity);
   assert.equal(state.ship.cargo, state.ship.cargoCapacity);
-  assert.equal(state.asteroid.reserve, 4.9);
+  assert.ok(Math.abs(state.asteroid.reserve - 4.9) < 1e-9);
   assert.equal(state.ship.state, "travel-to-market");
 });
 
