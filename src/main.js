@@ -234,28 +234,21 @@ function getSlotLayout() {
     size: cellSize
   }));
 }
-function drawShipAt(x,y,angle,zoom) {
-  ctx.save(); ctx.translate(x,y); ctx.rotate(angle); ctx.scale(zoom,zoom);
-  ctx.fillStyle = "rgba(169,244,207,.07)"; ctx.beginPath(); ctx.ellipse(0,0,47,33,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = "#162a30"; ctx.strokeStyle = "#9ce7cd"; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(31,0); ctx.lineTo(12,-12); ctx.lineTo(-20,-16); ctx.lineTo(-35,-7); ctx.lineTo(-35,7); ctx.lineTo(-20,16); ctx.lineTo(12,12); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#7c9c9c"; ctx.beginPath(); ctx.moveTo(3,-8); ctx.lineTo(18,0); ctx.lineTo(3,8); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = "#baffdf"; ctx.fillRect(-31,-3,7,6);
-  if (!configuring) {
-    ctx.fillStyle = "rgba(169,244,207,.65)"; ctx.beginPath(); ctx.moveTo(-36,-4); ctx.lineTo(-52,0); ctx.lineTo(-36,4); ctx.closePath(); ctx.fill();
-  }
+function drawShipAt(x,y,angle,zoom,selected=false) {
+  // Placeholder rendering only: replace this abstract navigation marker with final art later.
+  ctx.save(); ctx.translate(x,y); ctx.scale(zoom,zoom);
+  ctx.strokeStyle = selected ? "#d2ffe9" : "rgba(169,244,207,.78)";
+  ctx.lineWidth = selected ? 2 : 1.25;
+  ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle = "rgba(169,244,207,.25)";
+  ctx.setLineDash([2,4]); ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "#a9f4cf"; ctx.beginPath(); ctx.arc(0,0,3.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "rgba(169,244,207,.7)"; ctx.fillRect(-26,-1,7,2); ctx.fillRect(19,-1,7,2);
   ctx.restore();
 }
 function drawConfiguredShip() {
+  // Module positions are schematic placeholders, not a rendered ship hull.
   const slots = getSlotLayout();
-  const size = 37, gap = 7;
-  const minX = Math.min(...design.cells.map(c=>c.x)), maxX = Math.max(...design.cells.map(c=>c.x));
-  const minY = Math.min(...design.cells.map(c=>c.y)), maxY = Math.max(...design.cells.map(c=>c.y));
-  const hullW = (maxX-minX+1)*size+(maxX-minX)*gap+40, hullH = (maxY-minY+1)*size+(maxY-minY)*gap+48;
-  ctx.save(); ctx.translate(600,350);
-  ctx.fillStyle = "rgba(20,46,53,.7)"; ctx.strokeStyle = "rgba(137,219,197,.5)"; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(-hullW/2+30,-hullH/2); ctx.lineTo(hullW/2-28,-hullH/2); ctx.lineTo(hullW/2,-hullH/2+30); ctx.lineTo(hullW/2,hullH/2-30); ctx.lineTo(hullW/2-30,hullH/2); ctx.lineTo(-hullW/2+24,hullH/2); ctx.lineTo(-hullW/2,hullH/2-25); ctx.lineTo(-hullW/2,-hullH/2+25); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = "rgba(115,217,232,.13)"; ctx.beginPath(); ctx.moveTo(-hullW/2+18,0); ctx.lineTo(hullW/2-18,0); ctx.stroke(); ctx.restore();
   for (const slot of slots) {
     const cell = slot.cell, selected = cell.x+","+cell.y === selectedSlot;
     const def = moduleLevelDefinition(cell);
@@ -269,13 +262,16 @@ function drawConfiguredShip() {
     ctx.fillStyle = "#d5e3eb"; ctx.font = "8px 'IBM Plex Mono', monospace"; ctx.fillText(def ? "LV "+cell.moduleLevel : categoryNames[cell.compartment].toUpperCase(),0,10);
     ctx.restore();
   }
+  ctx.save();
+  ctx.strokeStyle = "rgba(169,244,207,.15)"; ctx.setLineDash([3,8]); ctx.beginPath(); ctx.arc(600,350, Math.max(90, Math.min(230, slots.length*17)), 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
   ctx.fillStyle = "#a8c5d2"; ctx.font = "10px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
-  ctx.fillText("ПИОНЕР / МОДУЛЬНАЯ КОМПОНОВКА",600,350+hullH/2+24);
+  ctx.fillText("СХЕМА МОДУЛЬНЫХ СИСТЕМ",600,350+Math.max(90, Math.min(230, slots.length*17))+24);
+  ctx.restore();
 }
 function drawShip() {
   if (configuring) { drawConfiguredShip(); return; }
   const ship = state.ship, moving = ship.state.startsWith("travel-to");
-  drawShipAt(ship.x,ship.y,moving?Math.atan2(ship.vy,ship.vx):-Math.PI/5,1);
+  drawShipAt(ship.x,ship.y,moving?Math.atan2(ship.vy,ship.vx):0,1,shipPanelOpen);
   ctx.fillStyle = "#d6e8e6"; ctx.font = "600 10px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
   ctx.fillText("ПИОНЕР",ship.x,ship.y+34);
   ctx.fillStyle = "#8199a8"; ctx.font = "8px 'IBM Plex Mono', monospace"; ctx.fillText(Math.floor(ship.cargo)+" / "+ship.cargoCapacity+" CARGO",ship.x,ship.y+46);
