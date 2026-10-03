@@ -32,14 +32,7 @@ export function createInitialState() {
     salesCount: 0
   }));
 
-  return {
-    version: CONFIG.version,
-    credits: CONFIG.start.credits,
-    gameSeconds: CONFIG.start.gameSeconds,
-    nextMarketUpdateAt: CONFIG.market.updateIntervalSeconds,
-    paused: false,
-    speedMultiplier: CONFIG.simulation.initialSpeedMultiplier,
-    ship: {
+  const firstShip = {
       id: "ship-01",
       name: "Пионер",
       x: shipConfig.x,
@@ -54,8 +47,21 @@ export function createInitialState() {
       targetId: null,
       state: "idle",
       lastSaleId: null,
-      totalSold: 0
-    },
+      totalSold: 0,
+      autoRepeat: false,
+      design: null
+  };
+
+  return {
+    version: CONFIG.version,
+    credits: CONFIG.start.credits,
+    gameSeconds: CONFIG.start.gameSeconds,
+    nextMarketUpdateAt: CONFIG.market.updateIntervalSeconds,
+    paused: false,
+    speedMultiplier: CONFIG.simulation.initialSpeedMultiplier,
+    ship: firstShip,
+    ships: [firstShip],
+    selectedShipId: firstShip.id,
     asteroids,
     markets,
     selectedAsteroidId: asteroids[0].id,
@@ -121,7 +127,7 @@ export function selectMarket(state, marketId) {
   return { ok: true };
 }
 
-export function commandShip(state, targetId) {
+function commandCurrentShip(state, targetId) {
   const target = getTarget(state, targetId);
   if (!target) return { ok: false, reason: "Неизвестная цель." };
 
@@ -162,7 +168,7 @@ function nearestMarket(state) {
   , state.markets[0]);
 }
 
-export function sellCargo(state, marketId = null) {
+function sellCurrentCargo(state, marketId = null) {
   const market = getMarket(state, marketId ?? state.ship.targetId)
     ?? state.markets.find((item) => distanceBetween(state.ship, item) <= CONFIG.navigation.arrivalRadius + 2);
   if (!market || distanceBetween(state.ship, market) > CONFIG.navigation.arrivalRadius + 2) {
@@ -316,7 +322,7 @@ function updateMarketDemand(state) {
   }
 }
 
-export function stepSimulation(state, realDeltaSeconds) {
+function stepCurrentShip(state, dt) {\n  updateShipMovement(state, dt);\n  updateMining(state, dt);\n}\n\nexport function stepSimulation(state, realDeltaSeconds) {
   if (state.paused || !Number.isFinite(realDeltaSeconds) || realDeltaSeconds <= 0) return state;
   const realDt = Math.min(realDeltaSeconds, CONFIG.simulation.maxRealDelta);
   const dt = realDt * state.speedMultiplier;
@@ -350,4 +356,58 @@ export function getShipStatusLabel(state) {
     "travel-to-market-empty": "Курс на станцию"
   };
   return labels[state.ship.state] ?? "Неизвестное состояние";
+}
+
+
+function withShip(state, shipId, callback) {
+  const previous = state.ship;
+  const ship = (state.ships ?? [previous]).find(item => item.id === shipId);
+  if (!ship) return { ok: false, reason: "Корабль не найден." };
+  state.ship = ship;
+  try { return callback(); } finally { state.ship = previous; }
+}
+
+export function selectShip(state, shipId) {
+  const ship = (state.ships ?? [state.ship]).find(item => item.id === shipId);
+  if (!ship) return { ok: false, reason: "Корабль не найден." };
+  state.selectedShipId = shipId;
+  state.ship = ship;
+  return { ok: true, ship };
+}
+
+export function commandShip(state, targetId, shipId = state.selectedShipId ?? state.ships?.[0]?.id) {
+  return withShip(state, shipId, () => commandCurrentShip(state, targetId));
+}
+
+export function sellCargo(state, marketId = null, shipId = state.selectedShipId ?? state.ships?.[0]?.id) {
+  return withShip(state, shipId, () => sellCurrentCargo(state, marketId));
+}
+
+export function buyShip(state) {
+  const ships = state.ships ?? (state.ships = [state.ship]);
+  if (ships.length >= 3) return { ok: false, reason: "Достигнут лимит флота: 3 корабля." };
+  const cost = 600 + (ships.length - 1) * 400;
+  if (state.credits < cost) return { ok: false, reason: "Недостаточно кредитов для нового корабля." };
+  const template = ships[0];
+  const id = "ship-" + String(ships.length + 1).padStart(2,"0");
+  const ship = {
+    ...template, id, name: ships.length === 1 ? "Старатель" : "Пионер-3",
+    x: template.x + ships.length * 28, y: template.y + ships.length * 22, vx: 0, vy: 0,
+    cargo: 0, cargoResourceId: null, targetId: null, state: "idle", lastSaleId: null,
+    totalSold: 0, autoRepeat: false, design: null
+  };
+  state.credits -= cost;
+  ships.push(ship);
+  state.selectedShipId = ship.id;
+  state.ship = ship;
+  addEvent(state,"fleet",`В состав флота принят корабль «${ship.name}» за ${cost} ¢.`);
+  return { ok: true, ship, cost };
+}
+
+export function setShipAutoRepeat(state, enabled, shipId = state.selectedShipId ?? state.ships?.[0]?.id) {
+  return withShip(state, shipId, () => {
+    state.ship.autoRepeat = Boolean(enabled);
+    addEvent(state,"fleet",`Автоповтор маршрута для «${state.ship.name}»: ${state.ship.autoRepeat ? "включён" : "выключен"}.`);
+    return { ok: true, enabled: state.ship.autoRepeat };
+  });
 }
