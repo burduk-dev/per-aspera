@@ -164,3 +164,38 @@ test("a ship cannot mix different resource types in one cargo hold", () => {
   assert.equal(result.ok, false);
   assert.equal(state.ship.cargo, 5);
 });
+
+
+test("fleet can buy up to three ships with independent tasks and cargo", async () => {
+  const { buyShip, selectShip } = await import("../src/simulation.js");
+  const state = createInitialState();
+  const first = state.ships[0];
+  const secondResult = buyShip(state);
+  assert.equal(secondResult.ok, true);
+  const second = secondResult.ship;
+  assert.equal(state.ships.length, 2);
+  assert.equal(state.credits, 400);
+  assert.equal(commandShip(state, state.asteroids[0].id, first.id).ok, true);
+  assert.equal(commandShip(state, state.asteroids[1].id, second.id).ok, true);
+  assert.equal(first.targetId, state.asteroids[0].id);
+  assert.equal(second.targetId, state.asteroids[1].id);
+  assert.equal(first.state, "travel-to-asteroid");
+  assert.equal(second.state, "travel-to-asteroid");
+  selectShip(state, first.id);
+  for (let i = 0; i < 10; i += 1) stepSimulation(state, 0.25);
+  assert.notEqual(first.x, 245);
+  assert.notEqual(second.x, 273);
+  const thirdResult = buyShip(state);
+  assert.equal(thirdResult.ok, true);
+  assert.equal(state.ships.length, 3);
+  assert.equal(buyShip(state).ok, false);
+});
+
+test("route auto-repeat is stored independently per ship", async () => {
+  const { buyShip, setShipAutoRepeat } = await import("../src/simulation.js");
+  const state = createInitialState();
+  const second = buyShip(state).ship;
+  assert.equal(setShipAutoRepeat(state, true, second.id).ok, true);
+  assert.equal(second.autoRepeat, true);
+  assert.equal(state.ships[0].autoRepeat, false);
+});
