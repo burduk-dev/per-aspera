@@ -185,7 +185,7 @@ test("fleet can buy up to three ships with independent tasks and cargo", async (
   for (let i = 0; i < 10; i += 1) stepSimulation(state, 0.25);
   assert.notEqual(first.x, 245);
   assert.notEqual(second.x, 273);
-  const thirdResult = buyShip(state);
+  state.credits = 2000;\n  const thirdResult = buyShip(state);
   assert.equal(thirdResult.ok, true);
   assert.equal(state.ships.length, 3);
   assert.equal(buyShip(state).ok, false);
